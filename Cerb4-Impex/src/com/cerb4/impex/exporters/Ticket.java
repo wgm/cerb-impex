@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import org.apache.commons.codec.binary.Base64;
 import org.dom4j.Document;
@@ -17,17 +19,22 @@ import com.cerb4.impex.Database;
 public class Ticket {
 	public void export() {
 		Connection conn = Database.getInstance();
+		String importGroupName = "Import:Cerb3"; // [TODO] Make this configurable
+		
+		SimpleDateFormat rfcDateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z");
 
 		Integer iCount = 0;
 		Integer iSubDir = 0;
 		
 		try {
+			// [TODO] Skip spam training positives too
 			ResultSet rsTickets = conn.createStatement().executeQuery("SELECT t.ticket_id, t.ticket_subject, t.ticket_mask, UNIX_TIMESTAMP(t.ticket_date) as ticket_date, "+
-				"UNIX_TIMESTAMP(ticket_last_date) as ticket_updated, t.is_waiting_on_customer, t.is_closed "+
+				"UNIX_TIMESTAMP(ticket_last_date) as ticket_updated, t.is_waiting_on_customer, t.is_closed, q.queue_name, q.queue_reply_to "+
 				"FROM ticket t "+
-				"WHERE t.is_deleted = 0 AND t.ticket_id=1473 "+ // don't export deleted
+				"INNER JOIN queue q ON (q.queue_id=t.ticket_queue_id) "+
+				"WHERE t.is_deleted = 0 AND t.ticket_id=12 "+ //  AND t.ticket_id=1473
 				"ORDER BY t.ticket_id ASC "+
-				"LIMIT 0,50");
+				"LIMIT 0,100");
 	
 			File outputDir = null;
 			
@@ -37,7 +44,7 @@ public class Ticket {
 					iSubDir++;
 					
 					// Make the output subdirectory
-					outputDir = new File("output/tickets/" + String.format("%06d", iSubDir));
+					outputDir = new File("output/00-tickets-" + String.format("%06d", iSubDir));
 					outputDir.mkdirs();
 				}
 				
@@ -51,6 +58,8 @@ public class Ticket {
 				Integer iUpdatedDate = rsTickets.getInt("ticket_updated");
 				Integer isWaiting = rsTickets.getInt("is_waiting_on_customer");
 				Integer isClosed = rsTickets.getInt("is_closed");
+				String sQueueName = rsTickets.getString("queue_name");
+				String sQueueReplyTo = rsTickets.getString("queue_reply_to");
 				
 				if(sMask.isEmpty()) {
 					// [TODO] Make this prefix configurable
@@ -58,11 +67,26 @@ public class Ticket {
 				}
 				
 				eTicket.addElement("subject").addText(sSubject);
+				eTicket.addElement("group").addText(importGroupName);
+				eTicket.addElement("bucket").addText(sQueueName);
 				eTicket.addElement("mask").addText(sMask);
 				eTicket.addElement("created_date").addText(iCreatedDate.toString());
 				eTicket.addElement("updated_date").addText(iUpdatedDate.toString());
 				eTicket.addElement("is_waiting").addText(isClosed.toString());
 				eTicket.addElement("is_closed").addText(isWaiting.toString());
+				
+				ResultSet rsRequesters = conn.createStatement().executeQuery("SELECT a.address_address "+
+					"FROM requestor r "+
+					"INNER JOIN address a ON (a.address_id=r.address_id) "+
+					"WHERE r.ticket_id = " + iTicketId + " " 
+					);
+				
+				Element eRequesters = eTicket.addElement("requesters");
+				
+				while(rsRequesters.next()) {
+					String sRequesterAddy = rsRequesters.getString("address_address");
+					eRequesters.addElement("address").setText(sRequesterAddy);
+				}
 				
 				ResultSet rsMessages = conn.createStatement().executeQuery("SELECT thread_id, thread_message_id, thread_address_id, address.address_address as sender_from, "+
 					"UNIX_TIMESTAMP(thread_date) as thread_date, is_agent_message "+
@@ -76,13 +100,18 @@ public class Ticket {
 				while(rsMessages.next()) {
 					Integer iThreadId = rsMessages.getInt("thread_id");
 					String sThreadSender = rsMessages.getString("sender_from");
-					Integer iThreadDate = rsMessages.getInt("thread_date");
+					Long lThreadDate = rsMessages.getLong("thread_date");
 //					Integer iThreadWorker = rsMessages.getInt("is_agent_message");
 					
 					Element eMessage = eMessages.addElement("message");
-					eMessage.addElement("created_date").addText(iThreadDate.toString());
-					eMessage.addElement("from").addText(sThreadSender);
-//					eMessage.addElement("").addText("");
+					
+					Element eMessageHeaders = eMessage.addElement("headers");
+					
+					String sMessageDate = rfcDateFormat.format(new Date(lThreadDate*1000));
+					
+					eMessageHeaders.addElement("date").addText(sMessageDate);
+					eMessageHeaders.addElement("to").addText(sQueueReplyTo);
+					eMessageHeaders.addElement("from").addText(sThreadSender);
 					
 					// Content
 					ResultSet rsContents = conn.createStatement().executeQuery("SELECT thread_content_part "+
