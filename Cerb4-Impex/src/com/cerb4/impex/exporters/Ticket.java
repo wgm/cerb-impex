@@ -11,7 +11,6 @@ import org.apache.commons.codec.binary.Base64;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
-import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
 
 import com.cerb4.impex.Database;
@@ -32,7 +31,7 @@ public class Ticket {
 				"UNIX_TIMESTAMP(ticket_last_date) as ticket_updated, t.is_waiting_on_customer, t.is_closed, q.queue_name, q.queue_reply_to "+
 				"FROM ticket t "+
 				"INNER JOIN queue q ON (q.queue_id=t.ticket_queue_id) "+
-				"WHERE t.is_deleted = 0 AND t.ticket_id=12 "+ //  AND t.ticket_id=1473
+				"WHERE t.is_deleted = 0 "+ //  AND t.ticket_id=1473 //  AND t.ticket_id=12
 				"ORDER BY t.ticket_id ASC "+
 				"LIMIT 0,100");
 	
@@ -123,6 +122,7 @@ public class Ticket {
 					
 					while(rsContents.next()) {
 						strContent.append(rsContents.getString("thread_content_part"));
+						System.out.println("Content: " + rsContents.getString("thread_content_part"));
 					}
 					
 					eMessage.addElement("content").setText(strContent.toString());
@@ -182,7 +182,7 @@ public class Ticket {
 				
 				System.out.println(doc.asXML());
 				
-				XMLWriter writer = new XMLWriter(new FileWriter(outputDir.getPath() + "/" + iTicketId + ".xml"), OutputFormat.createPrettyPrint()); 
+				XMLWriter writer = new XMLWriter(new FileWriter(outputDir.getPath() + "/" + iTicketId + ".xml")); // OutputFormat.createPrettyPrint() 
 				writer.write(doc);
 				writer.close();
 				
