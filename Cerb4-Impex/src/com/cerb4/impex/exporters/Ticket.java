@@ -34,7 +34,7 @@ public class Ticket {
 				"INNER JOIN queue q ON (q.queue_id=t.ticket_queue_id) "+
 				"WHERE t.is_deleted = 0 "+ //  AND t.ticket_id=1473 // AND t.ticket_id=29
 				"ORDER BY t.ticket_id ASC "+
-				"LIMIT 50100,10");
+				"LIMIT 0,100");
 	
 			File outputDir = null;
 			
@@ -73,8 +73,8 @@ public class Ticket {
 				eTicket.addElement("mask").addText(sMask);
 				eTicket.addElement("created_date").addText(iCreatedDate.toString());
 				eTicket.addElement("updated_date").addText(iUpdatedDate.toString());
-				eTicket.addElement("is_waiting").addText(isClosed.toString());
-				eTicket.addElement("is_closed").addText(isWaiting.toString());
+				eTicket.addElement("is_waiting").addText(isWaiting.toString());
+				eTicket.addElement("is_closed").addText(isClosed.toString());
 				
 				ResultSet rsRequesters = conn.createStatement().executeQuery("SELECT a.address_address "+
 					"FROM requestor r "+
