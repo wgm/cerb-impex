@@ -11,6 +11,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
+import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
 
 import com.cerb4.impex.Database;
@@ -31,9 +32,9 @@ public class Ticket {
 				"UNIX_TIMESTAMP(ticket_last_date) as ticket_updated, t.is_waiting_on_customer, t.is_closed, q.queue_name, q.queue_reply_to "+
 				"FROM ticket t "+
 				"INNER JOIN queue q ON (q.queue_id=t.ticket_queue_id) "+
-				"WHERE t.is_deleted = 0 "+ //  AND t.ticket_id=1473 //  AND t.ticket_id=12
+				"WHERE t.is_deleted = 0 "+ //  AND t.ticket_id=1473 // AND t.ticket_id=29
 				"ORDER BY t.ticket_id ASC "+
-				"LIMIT 0,100");
+				"LIMIT 50100,10");
 	
 			File outputDir = null;
 			
@@ -49,6 +50,7 @@ public class Ticket {
 				
 				Document doc = DocumentHelper.createDocument();
 				Element eTicket = doc.addElement("ticket");
+				doc.setXMLEncoding("ISO-8859-1");
 				
 				Integer iTicketId = rsTickets.getInt("ticket_id");
 				String sSubject = rsTickets.getString("ticket_subject");
@@ -121,18 +123,22 @@ public class Ticket {
 					StringBuilder strContent = new StringBuilder();
 					
 					while(rsContents.next()) {
-						strContent.append(rsContents.getString("thread_content_part"));
-						System.out.println("Content: " + rsContents.getString("thread_content_part"));
+						String sContentPart = rsContents.getString("thread_content_part");
+						strContent.append(sContentPart);
+						// [TODO] Ugly
+						if(!rsContents.isLast() && 255 != sContentPart.length())
+							strContent.append(" ");
 					}
 					
-					eMessage.addElement("content").setText(strContent.toString());
+					eMessage.addElement("content").addCDATA(strContent.toString());
 					
 					// Attachments
 					Element eAttachments = eMessage.addElement("attachments");
 					
 					ResultSet rsAttachments = conn.createStatement().executeQuery("SELECT file_id, file_name, file_size "+
 						"FROM thread_attachments " +
-						"WHERE thread_id = " + iThreadId + " " +
+						"WHERE file_name != 'message_source.xml' " + 
+						"AND thread_id = " + iThreadId + " " +
 						"ORDER BY file_id ASC");
 					
 					while(rsAttachments.next()) {
@@ -140,12 +146,15 @@ public class Ticket {
 						String sFileName = rsAttachments.getString("file_name");
 						String sFileSize = rsAttachments.getString("file_size");
 						
-						Element eAttachment = eAttachments.addElement("attachments");
+						Element eAttachment = eAttachments.addElement("attachment");
 						eAttachment.addElement("name").setText(sFileName);
 						eAttachment.addElement("size").setText(sFileSize);
+						eAttachment.addElement("mimetype").setText("");
 						
 						Element eAttachmentContent = eAttachment.addElement("content");
 						eAttachmentContent.addAttribute("encoding", "base64");
+						
+						// [TODO] Option to ignore huge attachments?
 						
 						ResultSet rsAttachment = conn.createStatement().executeQuery("SELECT part_content FROM thread_attachments_parts WHERE file_id = " + iFileId);
 						
@@ -155,7 +164,7 @@ public class Ticket {
 							str.append(rsAttachment.getString("part_content"));
 						}
 						
-						eAttachmentContent.setText(new String(Base64.encodeBase64(str.toString().getBytes())));
+						eAttachmentContent.addCDATA(new String(Base64.encodeBase64(str.toString().getBytes())));
 					}
 				}
 				
@@ -167,7 +176,7 @@ public class Ticket {
 						"FROM next_step "+
 						"INNER JOIN user ON (user.user_id=next_step.created_by_agent_id) "+
 						"WHERE ticket_id = " + iTicketId + " "+
-				"ORDER BY id ASC");
+						"ORDER BY id ASC");
 				
 				while(rsComments.next()) {
 					Integer iCommentCreatedDate = rsComments.getInt("date_created");
@@ -177,12 +186,15 @@ public class Ticket {
 					Element eComment = eComments.addElement("comment");
 					eComment.addElement("created_date").setText(iCommentCreatedDate.toString());
 					eComment.addElement("author").setText(sCommentAuthor);
-					eComment.addElement("text").setText(sCommentText);
+					eComment.addElement("text").addCDATA(sCommentText);
 				}
 				
-				System.out.println(doc.asXML());
+//				System.out.println(doc.asXML());
 				
-				XMLWriter writer = new XMLWriter(new FileWriter(outputDir.getPath() + "/" + iTicketId + ".xml")); // OutputFormat.createPrettyPrint() 
+				OutputFormat format = OutputFormat.createPrettyPrint();
+				format.setEncoding("ISO-8859-1");
+				format.setOmitEncoding(false);
+				XMLWriter writer = new XMLWriter(new FileWriter(outputDir.getPath() + "/" + iTicketId + ".xml"), format); 
 				writer.write(doc);
 				writer.close();
 				

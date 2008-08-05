@@ -14,7 +14,7 @@ public class Database {
 			try {
 				Class.forName("com.mysql.jdbc.Driver").newInstance();
 				// [TODO] Move to CLI
-				Database.conn = DriverManager.getConnection("jdbc:mysql://xev.webgroupmedia.com:3306/cer_wgm_support", "jeff", "bubbleb00ble");
+				Database.conn = DriverManager.getConnection("jdbc:mysql://xev.webgroupmedia.com:3306/cer_wgm_support?characterEncoding=latin1", "jeff", "bubbleb00ble");
 				
 			} catch (Exception ex) {
 				ex.printStackTrace();
