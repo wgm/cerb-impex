@@ -14,7 +14,7 @@ import org.dom4j.io.XMLWriter;
 
 import com.cerb4.impex.Database;
 
-public class Address {
+public class Worker {
 	public void export() {
 		Connection conn = Database.getInstance();
 
@@ -23,7 +23,7 @@ public class Address {
 		
 		try {
 			Statement s = conn.createStatement();
-			s.execute("SELECT address_id, address_address, address_banned FROM address ORDER BY address_id ASC");
+			s.execute("SELECT user_id, user_name, user_email, user_password, user_superuser FROM user ORDER BY user_id ASC");
 			ResultSet rs = s.getResultSet();
 	
 			File outputDir = null;
@@ -34,22 +34,29 @@ public class Address {
 					iSubDir++;
 					
 					// Make the output subdirectory
-					outputDir = new File("output/addresses/" + String.format("%06d", iSubDir));
+					outputDir = new File("output/00-workers-" + String.format("%06d", iSubDir));
 					outputDir.mkdirs();
 				}
 				
 				Document doc = DocumentHelper.createDocument();
-				Element eAddress = doc.addElement("address");
+				Element eWorker = doc.addElement("worker");
 				doc.setXMLEncoding("ISO-8859-1");
 				
-				Integer iId = rs.getInt("address_id");
-				String sEmail = rs.getString("address_address");
-				Integer isBanned = rs.getInt("address_banned");
+				Integer iId = rs.getInt("user_id");
+				String sName = rs.getString("user_name");
+				String sEmail = rs.getString("user_email");
+				String sPassword = rs.getString("user_password");
+				Integer isSuperuser = rs.getInt("user_superuser");
 				
-				eAddress.addElement("email").addText(sEmail);
-				eAddress.addElement("is_banned").addText(isBanned.toString());
+				// Split name
+				String sFirstName = sName.substring(0,sName.lastIndexOf(" "));
+				String sLastName = sName.substring(sName.lastIndexOf(" "));
 				
-//				System.out.println(doc.asXML());
+				eWorker.addElement("first_name").addText(sFirstName);
+				eWorker.addElement("last_name").addText(sLastName);
+				eWorker.addElement("email").addText(sEmail);
+				eWorker.addElement("password").addText(sPassword);
+				eWorker.addElement("is_superuser").addText(isSuperuser.toString());
 				
 				OutputFormat format = OutputFormat.createPrettyPrint();
 				format.setEncoding("ISO-8859-1");

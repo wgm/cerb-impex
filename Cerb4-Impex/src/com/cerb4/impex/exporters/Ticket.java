@@ -34,7 +34,7 @@ public class Ticket {
 				"INNER JOIN queue q ON (q.queue_id=t.ticket_queue_id) "+
 				"WHERE t.is_deleted = 0 "+ //  AND t.ticket_id=1473 // AND t.ticket_id=29
 				"ORDER BY t.ticket_id ASC "+
-				"LIMIT 0,100");
+				"LIMIT 0,5");
 	
 			File outputDir = null;
 			
@@ -44,7 +44,7 @@ public class Ticket {
 					iSubDir++;
 					
 					// Make the output subdirectory
-					outputDir = new File("output/00-tickets-" + String.format("%06d", iSubDir));
+					outputDir = new File("output/02-tickets-" + String.format("%06d", iSubDir));
 					outputDir.mkdirs();
 				}
 				
@@ -89,7 +89,7 @@ public class Ticket {
 					eRequesters.addElement("address").setText(sRequesterAddy);
 				}
 				
-				ResultSet rsMessages = conn.createStatement().executeQuery("SELECT thread_id, thread_message_id, thread_address_id, address.address_address as sender_from, "+
+				ResultSet rsMessages = conn.createStatement().executeQuery("SELECT thread_id, thread_message_id, thread_subject, thread_address_id, address.address_address as sender_from, "+
 					"UNIX_TIMESTAMP(thread_date) as thread_date, is_agent_message "+
 					"FROM thread "+
 					"INNER JOIN address ON (thread.thread_address_id=address.address_id) "+
@@ -101,8 +101,9 @@ public class Ticket {
 				while(rsMessages.next()) {
 					Integer iThreadId = rsMessages.getInt("thread_id");
 					String sThreadSender = rsMessages.getString("sender_from");
+					String sThreadSubject = rsMessages.getString("thread_subject");
+					String sThreadMsgId = rsMessages.getString("thread_message_id");
 					Long lThreadDate = rsMessages.getLong("thread_date");
-//					Integer iThreadWorker = rsMessages.getInt("is_agent_message");
 					
 					Element eMessage = eMessages.addElement("message");
 					
@@ -113,6 +114,10 @@ public class Ticket {
 					eMessageHeaders.addElement("date").addText(sMessageDate);
 					eMessageHeaders.addElement("to").addText(sQueueReplyTo);
 					eMessageHeaders.addElement("from").addText(sThreadSender);
+					if(!sThreadSubject.isEmpty())
+						eMessageHeaders.addElement("subject").addText(sThreadSubject);
+					if(!sThreadMsgId.isEmpty())
+						eMessageHeaders.addElement("message-id").addText(sThreadMsgId);
 					
 					// Content
 					ResultSet rsContents = conn.createStatement().executeQuery("SELECT thread_content_part "+
