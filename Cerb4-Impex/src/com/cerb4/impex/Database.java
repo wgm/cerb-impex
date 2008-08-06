@@ -17,7 +17,7 @@ public class Database {
 				String sDbUser = Configuration.get("dbUser", "");
 				String sDbPassword = Configuration.get("dbPassword", "");
 				
-				if(sDbConnection.isEmpty() || sDbUser.isEmpty()) {
+				if(0 == sDbConnection.length() || 0 == sDbUser.length()) {
 					System.err.println("No database connection information was provided by the config file.");
 				}
 				

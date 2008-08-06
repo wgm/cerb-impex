@@ -1,6 +1,6 @@
 package com.cerb4.impex;
 
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.util.Properties;
 
 public class Configuration {
@@ -8,7 +8,7 @@ public class Configuration {
 
 	static {
 		try {
-			properties.load(new FileReader("impex.config"));
+			properties.load(new FileInputStream("impex.config"));
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
