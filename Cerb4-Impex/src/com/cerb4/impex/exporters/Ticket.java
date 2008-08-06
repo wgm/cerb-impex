@@ -14,12 +14,13 @@ import org.dom4j.Element;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
 
+import com.cerb4.impex.Configuration;
 import com.cerb4.impex.Database;
 
 public class Ticket {
 	public void export() {
 		Connection conn = Database.getInstance();
-		String importGroupName = "Import:Cerb3"; // [TODO] Make this configurable
+		String importGroupName = Configuration.get("exportToGroup", "Import:Cerb3");
 		
 		SimpleDateFormat rfcDateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z");
 
@@ -34,7 +35,7 @@ public class Ticket {
 				"INNER JOIN queue q ON (q.queue_id=t.ticket_queue_id) "+
 				"WHERE t.is_deleted = 0 "+ //  AND t.ticket_id=1473 // AND t.ticket_id=29
 				"ORDER BY t.ticket_id ASC "+
-				"LIMIT 0,5");
+				"LIMIT 10000,5");
 	
 			File outputDir = null;
 			
@@ -63,8 +64,7 @@ public class Ticket {
 				String sQueueReplyTo = rsTickets.getString("queue_reply_to");
 				
 				if(sMask.isEmpty()) {
-					// [TODO] Make this prefix configurable
-					sMask = String.format("CERB3-%06d", iTicketId);
+					sMask = Configuration.get("exportMaskPrefix", "CERB3") + String.format("-%06d", iTicketId);
 				}
 				
 				eTicket.addElement("subject").addText(sSubject);
@@ -111,13 +111,13 @@ public class Ticket {
 					
 					String sMessageDate = rfcDateFormat.format(new Date(lThreadDate*1000));
 					
-					eMessageHeaders.addElement("date").addText(sMessageDate);
-					eMessageHeaders.addElement("to").addText(sQueueReplyTo);
-					eMessageHeaders.addElement("from").addText(sThreadSender);
+					eMessageHeaders.addElement("date").addCDATA(sMessageDate);
+					eMessageHeaders.addElement("to").addCDATA(sQueueReplyTo);
+					eMessageHeaders.addElement("from").addCDATA(sThreadSender);
 					if(!sThreadSubject.isEmpty())
-						eMessageHeaders.addElement("subject").addText(sThreadSubject);
+						eMessageHeaders.addElement("subject").addCDATA(sThreadSubject);
 					if(!sThreadMsgId.isEmpty())
-						eMessageHeaders.addElement("message-id").addText(sThreadMsgId);
+						eMessageHeaders.addElement("message-id").addCDATA(sThreadMsgId);
 					
 					// Content
 					ResultSet rsContents = conn.createStatement().executeQuery("SELECT thread_content_part "+
@@ -135,7 +135,9 @@ public class Ticket {
 							strContent.append(" ");
 					}
 					
-					eMessage.addElement("content").addCDATA(strContent.toString());
+					Element eMessageContent = eMessage.addElement("content");
+					eMessageContent.addAttribute("encoding", "base64");
+					eMessageContent.setText(new String(Base64.encodeBase64(strContent.toString().getBytes())));
 					
 					// Attachments
 					Element eAttachments = eMessage.addElement("attachments");
@@ -169,7 +171,7 @@ public class Ticket {
 							str.append(rsAttachment.getString("part_content"));
 						}
 						
-						eAttachmentContent.addCDATA(new String(Base64.encodeBase64(str.toString().getBytes())));
+						eAttachmentContent.addText(new String(Base64.encodeBase64(str.toString().getBytes())));
 					}
 				}
 				
@@ -191,7 +193,10 @@ public class Ticket {
 					Element eComment = eComments.addElement("comment");
 					eComment.addElement("created_date").setText(iCommentCreatedDate.toString());
 					eComment.addElement("author").setText(sCommentAuthor);
-					eComment.addElement("text").addCDATA(sCommentText);
+					
+					Element eCommentContent = eComment.addElement("content");
+					eCommentContent.addAttribute("encoding", "base64");
+					eCommentContent.setText(new String(Base64.encodeBase64(sCommentText.getBytes())));
 				}
 				
 //				System.out.println(doc.asXML());
@@ -199,7 +204,7 @@ public class Ticket {
 				OutputFormat format = OutputFormat.createPrettyPrint();
 				format.setEncoding("ISO-8859-1");
 				format.setOmitEncoding(false);
-				XMLWriter writer = new XMLWriter(new FileWriter(outputDir.getPath() + "/" + iTicketId + ".xml"), format); 
+				XMLWriter writer = new XMLWriter(new FileWriter(outputDir.getPath() + "/" + iTicketId + ".xml"), format);
 				writer.write(doc);
 				writer.close();
 				

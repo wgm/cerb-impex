@@ -10,11 +10,24 @@ public class Database {
 	}
 
 	public static Connection getInstance() {
+		
 		if(null == Database.conn) {
 			try {
+				String sDbConnection = Configuration.get("dbConnection", "");
+				String sDbUser = Configuration.get("dbUser", "");
+				String sDbPassword = Configuration.get("dbPassword", "");
+				
+				if(sDbConnection.isEmpty() || sDbUser.isEmpty()) {
+					System.err.println("No database connection information was provided by the config file.");
+				}
+				
 				Class.forName("com.mysql.jdbc.Driver").newInstance();
-				// [TODO] Move to CLI
-				Database.conn = DriverManager.getConnection("jdbc:mysql://xev.webgroupmedia.com:3306/cer_wgm_support?characterEncoding=latin1", "jeff", "bubbleb00ble");
+
+				Database.conn = DriverManager.getConnection(
+						sDbConnection,
+						sDbUser,
+						sDbPassword
+					);
 				
 			} catch (Exception ex) {
 				ex.printStackTrace();
