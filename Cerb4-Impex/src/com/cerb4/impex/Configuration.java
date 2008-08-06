@@ -6,9 +6,9 @@ import java.util.Properties;
 public class Configuration {
 	private static Properties properties = new Properties();
 
-	static {
+	public static void loadConfigFile(String fileName) {
 		try {
-			properties.load(new FileInputStream("impex.config"));
+			properties.load(new FileInputStream(fileName));
 		} catch(Exception e) {
 			e.printStackTrace();
 		}

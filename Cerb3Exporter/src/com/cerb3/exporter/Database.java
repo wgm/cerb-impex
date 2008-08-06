@@ -1,7 +1,9 @@
-package com.cerb4.impex;
+package com.cerb3.exporter;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+
+import com.cerb4.impex.Configuration;
 
 public class Database {
 	private static Connection conn = null;

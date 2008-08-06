@@ -1,4 +1,4 @@
-package com.cerb4.impex.exporters;
+package com.cerb3.exporter.entities;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -12,7 +12,7 @@ import org.dom4j.Element;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
 
-import com.cerb4.impex.Database;
+import com.cerb3.exporter.Database;
 
 public class Address {
 	public void export() {

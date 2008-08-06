@@ -1,7 +1,6 @@
-package com.cerb4.impex.exporters;
+package com.cerb3.exporter.entities;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -9,15 +8,16 @@ import java.sql.Statement;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
-import org.dom4j.io.OutputFormat;
-import org.dom4j.io.XMLWriter;
 
-import com.cerb4.impex.Database;
+import com.cerb3.exporter.Database;
+import com.cerb4.impex.Configuration;
+import com.cerb4.impex.XMLThread;
 
 public class Worker {
 	public void export() {
 		Connection conn = Database.getInstance();
-
+		String cfgOutputDir = Configuration.get("outputDir", "output");
+		
 		Integer iCount = 0;
 		Integer iSubDir = 0;
 		
@@ -34,7 +34,7 @@ public class Worker {
 					iSubDir++;
 					
 					// Make the output subdirectory
-					outputDir = new File("output/00-workers-" + String.format("%06d", iSubDir));
+					outputDir = new File(cfgOutputDir+"/00-workers-" + String.format("%06d", iSubDir));
 					outputDir.mkdirs();
 				}
 				
@@ -58,12 +58,13 @@ public class Worker {
 				eWorker.addElement("password").addText(sPassword);
 				eWorker.addElement("is_superuser").addText(isSuperuser.toString());
 				
-				OutputFormat format = OutputFormat.createPrettyPrint();
-				format.setEncoding("ISO-8859-1");
-				format.setOmitEncoding(false);
-				XMLWriter writer = new XMLWriter(new FileWriter(outputDir.getPath() + "/" + iId + ".xml"), format); 
-				writer.write(doc);
-				writer.close();
+				String sXmlFileName = outputDir.getPath() + "/" + iId + ".xml";
+
+				try {
+					new XMLThread(doc, sXmlFileName).start();
+				} catch(Exception e) {
+					e.printStackTrace();
+				}
 				
 				iCount++;
 			}

@@ -1,7 +1,6 @@
-package com.cerb4.impex.exporters;
+package com.cerb3.exporter.entities;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -12,28 +11,24 @@ import org.apache.commons.codec.binary.Base64;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
-import org.dom4j.io.OutputFormat;
-import org.dom4j.io.XMLWriter;
 
+import com.cerb3.exporter.Database;
 import com.cerb4.impex.Configuration;
-import com.cerb4.impex.Database;
+import com.cerb4.impex.XMLThread;
 
 public class Ticket {
 	public void export() {
 		Connection conn = Database.getInstance();
-		String importGroupName = Configuration.get("exportToGroup", "Import:Cerb3");
+		String cfgImportGroupName = Configuration.get("exportToGroup", "Import:Cerb3");
+		String cfgOutputDir = Configuration.get("outputDir", "output");
 		
 		SimpleDateFormat rfcDateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z");
 
-		OutputFormat format = OutputFormat.createPrettyPrint();
-		format.setEncoding("ISO-8859-1");
-		format.setOmitEncoding(false);
-		
 		Integer iCount = 0;
-		Integer iSubDir = 0;
-		
-		String sCfgTicketStartId = Configuration.get("exportTicketStartId", "1");
+
 		Boolean isVerbose = new Boolean(Configuration.get("verbose", "false"));
+		String sCfgTicketStartId = Configuration.get("exportTicketStartId", "1");
+		String sCfgTicketEndId = Configuration.get("exportTicketEndId", "");
 		
 		try {
 			// [TODO] Skip spam training positives too
@@ -44,29 +39,13 @@ public class Ticket {
 				"INNER JOIN queue q ON (q.queue_id=t.ticket_queue_id) "+
 				"WHERE t.is_deleted = 0 "+ //  AND t.ticket_id=1473 // AND t.ticket_id=29
 				"AND t.ticket_id >= " + sCfgTicketStartId + " " +
+				(0 != sCfgTicketEndId.length() ? ("AND t.ticket_id <= " + sCfgTicketEndId + " ") : "") +
 				"ORDER BY t.ticket_id ASC "+
-//				"LIMIT 0,5"+
 				"");
 	
 			File outputDir = null;
 			
 			while(rsTickets.next()) {
-				
-				if(0 == iCount % 2000 || 0 == iCount) {
-					iSubDir++;
-					
-					// Make the output subdirectory
-					outputDir = new File("output/02-tickets-" + String.format("%06d", iSubDir));
-					outputDir.mkdirs();
-					
-					System.out.println("Writing to " + outputDir.getAbsolutePath());
-					System.gc();
-				}
-				
-				Document doc = DocumentHelper.createDocument();
-				Element eTicket = doc.addElement("ticket");
-				doc.setXMLEncoding("ISO-8859-1");
-				
 				Integer iTicketId = rsTickets.getInt("ticket_id");
 				String sSubject = rsTickets.getString("ticket_subject");
 				String sMask = rsTickets.getString("ticket_mask");
@@ -77,12 +56,26 @@ public class Ticket {
 				String sQueueName = rsTickets.getString("queue_name");
 				String sQueueReplyTo = rsTickets.getString("queue_reply_to");
 				
+				if(0 == iCount % 2000 || 0 == iCount) {
+					// Make the output subdirectory
+					outputDir = new File(cfgOutputDir+"/02-tickets-" + String.format("%09d", iTicketId));
+					outputDir.mkdirs();
+	
+					if(!isVerbose)
+						System.out.println("Writing to " + outputDir.getAbsolutePath());
+//					System.gc();
+				}
+				
+				Document doc = DocumentHelper.createDocument();
+				Element eTicket = doc.addElement("ticket");
+				doc.setXMLEncoding("ISO-8859-1");
+				
 				if(0 != sMask.length()) {
 					sMask = Configuration.get("exportMaskPrefix", "CERB3") + String.format("-%06d", iTicketId);
 				}
 				
 				eTicket.addElement("subject").addText(sSubject);
-				eTicket.addElement("group").addText(importGroupName);
+				eTicket.addElement("group").addText(cfgImportGroupName);
 				eTicket.addElement("bucket").addText(sQueueName);
 				eTicket.addElement("mask").addText(sMask);
 				eTicket.addElement("created_date").addText(iCreatedDate.toString());
@@ -241,16 +234,14 @@ public class Ticket {
 				
 //				System.out.println(doc.asXML());
 				
-				XMLWriter writer = new XMLWriter(new FileWriter(outputDir.getPath() + "/" + iTicketId + ".xml"), format);
-				writer.write(doc);
-				writer.close();
+				String sXmlFileName = outputDir.getPath() + "/" + iTicketId + ".xml";
+
+				try {
+					new XMLThread(doc, sXmlFileName).start();
+				} catch(Exception e) {
+					e.printStackTrace();
+				}
 				
-				if(isVerbose)
-					System.out.println("Wrote " + iTicketId + ".xml");
-				
-				eTicket.clearContent();
-				doc.clearContent();
-				doc = null;
 				iCount++;
 			}
 			rsTickets.close();
