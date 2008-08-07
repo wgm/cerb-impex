@@ -58,7 +58,7 @@ public class Worker {
 				eWorker.addElement("password").addText(sPassword);
 				eWorker.addElement("is_superuser").addText(isSuperuser.toString());
 				
-				String sXmlFileName = outputDir.getPath() + "/" + iId + ".xml";
+				String sXmlFileName = outputDir.getPath() + "/" + String.format("-%06d", iId) + ".xml";
 
 				try {
 					new XMLThread(doc, sXmlFileName).start();

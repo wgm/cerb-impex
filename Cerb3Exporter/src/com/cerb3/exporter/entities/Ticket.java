@@ -234,7 +234,7 @@ public class Ticket {
 				
 //				System.out.println(doc.asXML());
 				
-				String sXmlFileName = outputDir.getPath() + "/" + iTicketId + ".xml";
+				String sXmlFileName = outputDir.getPath() + "/" + String.format("-%09d",iTicketId) + ".xml";
 
 				try {
 					new XMLThread(doc, sXmlFileName).start();
