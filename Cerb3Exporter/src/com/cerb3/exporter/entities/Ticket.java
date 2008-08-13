@@ -1,11 +1,14 @@
 package com.cerb3.exporter.entities;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import javax.sql.rowset.serial.SerialBlob;
 
 import org.apache.commons.codec.binary.Base64;
 import org.dom4j.Document;
@@ -187,16 +190,16 @@ public class Ticket {
 						Statement stmtAttachment = conn.createStatement();
 						ResultSet rsAttachment = stmtAttachment.executeQuery("SELECT part_content FROM thread_attachments_parts WHERE file_id = " + iFileId);
 						
-						StringBuilder str = new StringBuilder();
+						ByteArrayOutputStream baos = new ByteArrayOutputStream();
 						
 						while(rsAttachment.next()) {
-							str.append(rsAttachment.getString("part_content"));
+							SerialBlob tempBlob = new SerialBlob(rsAttachment.getBlob("part_content"));
+							baos.write(tempBlob.getBytes(1, (int)tempBlob.length()));
 						}
 						rsAttachment.close();
 						stmtAttachment.close();
 						
-						eAttachmentContent.addText(new String(Base64.encodeBase64(str.toString().getBytes())));
-						str = null;
+						eAttachmentContent.addText(new String(Base64.encodeBase64(baos.toByteArray())));
 					}
 					rsAttachments.close();
 					stmtAttachments.close();
