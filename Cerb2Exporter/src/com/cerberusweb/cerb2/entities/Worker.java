@@ -1,4 +1,4 @@
-package com.cerb3.exporter.entities;
+package com.cerberusweb.cerb2.entities;
 
 import java.io.File;
 import java.sql.Connection;
@@ -9,9 +9,9 @@ import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
-import com.cerb3.exporter.Database;
 import com.cerb4.impex.Configuration;
 import com.cerb4.impex.XMLThread;
+import com.cerberusweb.cerb2.Database;
 
 public class Worker {
 	public void export() {
@@ -47,7 +47,7 @@ public class Worker {
 				String sEmail = rs.getString("user_email");
 				String sPassword = rs.getString("user_password");
 				Integer isSuperuser = rs.getInt("user_superuser");
-				
+
 				if(0 == sEmail.length())
 					continue;
 				

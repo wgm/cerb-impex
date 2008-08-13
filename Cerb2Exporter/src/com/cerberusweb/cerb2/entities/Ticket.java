@@ -1,6 +1,5 @@
-package com.cerb3.exporter.entities;
+package com.cerberusweb.cerb2.entities;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -8,21 +7,19 @@ import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import javax.sql.rowset.serial.SerialBlob;
-
 import org.apache.commons.codec.binary.Base64;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
-import com.cerb3.exporter.Database;
 import com.cerb4.impex.Configuration;
 import com.cerb4.impex.XMLThread;
+import com.cerberusweb.cerb2.Database;
 
 public class Ticket {
 	public void export() {
 		Connection conn = Database.getInstance();
-		String cfgImportGroupName = Configuration.get("exportToGroup", "Import:Cerb3");
+		String cfgImportGroupName = Configuration.get("exportToGroup", "Import:Cerb2");
 		String cfgOutputDir = Configuration.get("outputDir", "output");
 		
 		SimpleDateFormat rfcDateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z");
@@ -34,18 +31,20 @@ public class Ticket {
 		String sCfgTicketEndId = Configuration.get("exportTicketEndId", "");
 		
 		try {
+			
 			// [TODO] Skip spam training positives too
 			Statement stmtTickets = conn.createStatement();
-			ResultSet rsTickets = stmtTickets.executeQuery("SELECT t.ticket_id, t.ticket_subject, t.ticket_mask, UNIX_TIMESTAMP(t.ticket_date) as ticket_date, "+
-				"UNIX_TIMESTAMP(ticket_last_date) as ticket_updated, t.is_waiting_on_customer, t.is_closed, q.queue_name, q.queue_reply_to "+
-				"FROM ticket t "+
-				"INNER JOIN queue q ON (q.queue_id=t.ticket_queue_id) "+
-				"WHERE t.is_deleted = 0 "+ 
-				"AND t.ticket_id >= " + sCfgTicketStartId + " " +
-				(0 != sCfgTicketEndId.length() ? ("AND t.ticket_id <= " + sCfgTicketEndId + " ") : "") +
-				"ORDER BY t.ticket_id ASC "+
-				"");
-	
+			
+			ResultSet rsTickets = stmtTickets.executeQuery("SELECT t.ticket_id, t.ticket_subject, t.ticket_mask, UNIX_TIMESTAMP(t.ticket_date) as ticket_date, "+ 
+			"UNIX_TIMESTAMP(last_update_date) as ticket_updated, t.ticket_status, t.ticket_queue_id, q.queue_name "+  
+			"FROM ticket t "+
+			"INNER JOIN queue q ON (q.queue_id=t.ticket_queue_id) "+ 
+			"WHERE t.ticket_status != 'dead' "+
+			"AND t.ticket_id >= " + sCfgTicketStartId + " " +
+			(0 != sCfgTicketEndId.length() ? ("AND t.ticket_id <= " + sCfgTicketEndId + " ") : "") +
+			"ORDER BY t.ticket_id ASC "+
+			"");
+			
 			File outputDir = null;
 			
 			while(rsTickets.next()) {
@@ -190,16 +189,16 @@ public class Ticket {
 						Statement stmtAttachment = conn.createStatement();
 						ResultSet rsAttachment = stmtAttachment.executeQuery("SELECT part_content FROM thread_attachments_parts WHERE file_id = " + iFileId);
 						
-						ByteArrayOutputStream baos = new ByteArrayOutputStream();
+						StringBuilder str = new StringBuilder();
 						
 						while(rsAttachment.next()) {
-							SerialBlob tempBlob = new SerialBlob(rsAttachment.getBlob("part_content"));
-							baos.write(tempBlob.getBytes(1, (int)tempBlob.length()));
+							str.append(rsAttachment.getString("part_content"));
 						}
 						rsAttachment.close();
 						stmtAttachment.close();
 						
-						eAttachmentContent.addText(new String(Base64.encodeBase64(baos.toByteArray())));
+						eAttachmentContent.addText(new String(Base64.encodeBase64(str.toString().getBytes())));
+						str = null;
 					}
 					rsAttachments.close();
 					stmtAttachments.close();
