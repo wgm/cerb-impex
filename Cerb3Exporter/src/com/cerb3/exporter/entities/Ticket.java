@@ -200,6 +200,7 @@ public class Ticket {
 						stmtAttachment.close();
 						
 						eAttachmentContent.addText(new String(Base64.encodeBase64(baos.toByteArray())));
+						baos.close();
 					}
 					rsAttachments.close();
 					stmtAttachments.close();

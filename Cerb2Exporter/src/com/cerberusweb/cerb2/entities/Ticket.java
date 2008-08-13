@@ -1,11 +1,15 @@
 package com.cerberusweb.cerb2.entities;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+
+import javax.sql.rowset.serial.SerialBlob;
 
 import org.apache.commons.codec.binary.Base64;
 import org.dom4j.Document;
@@ -31,12 +35,23 @@ public class Ticket {
 		String sCfgTicketEndId = Configuration.get("exportTicketEndId", "");
 		
 		try {
+			// Cache queue addresses
+			Statement stmtQueueAddresses = conn.createStatement();
+			
+			HashMap<Integer,String> mapQueueIdToAddy = new HashMap<Integer,String>();
+			ResultSet rsQueueAddresses = stmtQueueAddresses.executeQuery("select distinct queue_id, concat(lower(queue_address),'@',lower(queue_domain)) as queue_address FROM queue_addresses");
+			
+			while(rsQueueAddresses.next()) {
+				Integer iQueueId = rsQueueAddresses.getInt("queue_id");
+				String sQueueAddy = rsQueueAddresses.getString("queue_address");
+				mapQueueIdToAddy.put(iQueueId, sQueueAddy);
+			}
 			
 			// [TODO] Skip spam training positives too
 			Statement stmtTickets = conn.createStatement();
 			
 			ResultSet rsTickets = stmtTickets.executeQuery("SELECT t.ticket_id, t.ticket_subject, t.ticket_mask, UNIX_TIMESTAMP(t.ticket_date) as ticket_date, "+ 
-			"UNIX_TIMESTAMP(last_update_date) as ticket_updated, t.ticket_status, t.ticket_queue_id, q.queue_name "+  
+			"UNIX_TIMESTAMP(last_update_date) as ticket_updated, t.ticket_status, t.ticket_queue_id, q.queue_id, q.queue_name "+  
 			"FROM ticket t "+
 			"INNER JOIN queue q ON (q.queue_id=t.ticket_queue_id) "+ 
 			"WHERE t.ticket_status != 'dead' "+
@@ -53,10 +68,29 @@ public class Ticket {
 				String sMask = rsTickets.getString("ticket_mask").trim();
 				Integer iCreatedDate = rsTickets.getInt("ticket_date");
 				Integer iUpdatedDate = rsTickets.getInt("ticket_updated");
-				Integer isWaiting = rsTickets.getInt("is_waiting_on_customer");
-				Integer isClosed = rsTickets.getInt("is_closed");
+				String sStatus = rsTickets.getString("ticket_status");
+				Integer isWaiting = 0;
+				Integer isClosed = 0;
+				Integer iQueueId = rsTickets.getInt("queue_id");
 				String sQueueName = rsTickets.getString("queue_name");
-				String sQueueReplyTo = rsTickets.getString("queue_reply_to");
+				
+				// Closed
+				if(sStatus.equalsIgnoreCase("fixed") || sStatus.equalsIgnoreCase("resolved"))
+					isClosed = 1;
+				
+				// Waiting
+				if(sStatus.equalsIgnoreCase("awaiting-reply"))
+					isWaiting = 1;
+				
+				// [TODO] Allow importing custom statuses as custom ticket fields?
+				
+				// Queue Reply To
+				String sQueueReplyTo = "";
+				if(mapQueueIdToAddy.containsKey(iQueueId)) {
+					sQueueReplyTo = mapQueueIdToAddy.get(iQueueId);
+				} else {
+					// [TODO] Skip + log (queue doesn't exist)
+				}
 				
 				if(0 == iCount % 2000 || 0 == iCount) {
 					// Make the output subdirectory
@@ -73,7 +107,7 @@ public class Ticket {
 				doc.setXMLEncoding("ISO-8859-1");
 				
 				if(0 == sMask.length()) {
-					sMask = Configuration.get("exportMaskPrefix", "CERB3") + String.format("-%06d", iTicketId);
+					sMask = Configuration.get("exportMaskPrefix", "CERB2") + String.format("-%06d", iTicketId);
 				}
 				
 				eTicket.addElement("subject").addText(sSubject);
@@ -89,7 +123,8 @@ public class Ticket {
 				ResultSet rsRequesters = stmtRequesters.executeQuery("SELECT a.address_address "+
 					"FROM requestor r "+
 					"INNER JOIN address a ON (a.address_id=r.address_id) "+
-					"WHERE r.ticket_id = " + iTicketId + " " 
+					"WHERE r.ticket_id = " + iTicketId + " " +
+					"AND r.suppress = 0 "
 					);
 				
 				Element eRequesters = eTicket.addElement("requesters");
@@ -107,6 +142,7 @@ public class Ticket {
 					"FROM thread "+
 					"INNER JOIN address ON (thread.thread_address_id=address.address_id) "+
 					"WHERE ticket_id = "  + iTicketId + " " +
+					"AND thread_type != 'comment' "+
 					"ORDER BY thread_id ASC");
 				
 				Element eMessages = eTicket.addElement("messages");
@@ -189,16 +225,17 @@ public class Ticket {
 						Statement stmtAttachment = conn.createStatement();
 						ResultSet rsAttachment = stmtAttachment.executeQuery("SELECT part_content FROM thread_attachments_parts WHERE file_id = " + iFileId);
 						
-						StringBuilder str = new StringBuilder();
+						ByteArrayOutputStream baos = new ByteArrayOutputStream();
 						
 						while(rsAttachment.next()) {
-							str.append(rsAttachment.getString("part_content"));
+							SerialBlob tempBlob = new SerialBlob(rsAttachment.getBlob("part_content"));
+							baos.write(tempBlob.getBytes(1, (int)tempBlob.length()));
 						}
 						rsAttachment.close();
 						stmtAttachment.close();
 						
-						eAttachmentContent.addText(new String(Base64.encodeBase64(str.toString().getBytes())));
-						str = null;
+						eAttachmentContent.addText(new String(Base64.encodeBase64(baos.toByteArray())));
+						baos.close();
 					}
 					rsAttachments.close();
 					stmtAttachments.close();
@@ -211,16 +248,37 @@ public class Ticket {
 				Element eComments = eTicket.addElement("comments");
 				
 				Statement stmtComments = conn.createStatement();
-				ResultSet rsComments = stmtComments.executeQuery("SELECT id, date_created, note, user.user_email as worker_email "+
-						"FROM next_step "+
-						"INNER JOIN user ON (user.user_id=next_step.created_by_agent_id) "+
+				ResultSet rsComments = stmtComments.executeQuery("SELECT thread_id, unix_timestamp(thread_date) as date_created, "+
+						"a.address_address as worker_email "+
+						"FROM thread th "+
+						"INNER JOIN address a ON (th.thread_address_id=a.address_id) "+
 						"WHERE ticket_id = " + iTicketId + " "+
-						"ORDER BY id ASC");
+						"AND thread_type = 'comment' "+
+						"ORDER BY thread_id ASC");
 				
 				while(rsComments.next()) {
+					Integer iThreadId = rsComments.getInt("thread_id");
 					Integer iCommentCreatedDate = rsComments.getInt("date_created");
 					String sCommentAuthor = rsComments.getString("worker_email");
-					String sCommentText = rsComments.getString("note");
+
+					// Content
+					Statement stmtContents = conn.createStatement();
+					ResultSet rsContents = stmtContents.executeQuery("SELECT thread_content_part "+
+						"FROM thread_content_part "+
+						"WHERE thread_id = " + iThreadId + " " +
+						"ORDER BY content_id ASC");
+					
+					StringBuilder strContent = new StringBuilder();
+					
+					while(rsContents.next()) {
+						String sContentPart = rsContents.getString("thread_content_part");
+						strContent.append(sContentPart);
+						// [TODO] Ugly
+						if(!rsContents.isLast() && 255 != sContentPart.length())
+							strContent.append(" ");
+					}
+					rsContents.close();
+					stmtContents.close();
 					
 					Element eComment = eComments.addElement("comment");
 					eComment.addElement("created_date").setText(iCommentCreatedDate.toString());
@@ -228,8 +286,8 @@ public class Ticket {
 					
 					Element eCommentContent = eComment.addElement("content");
 					eCommentContent.addAttribute("encoding", "base64");
-					eCommentContent.setText(new String(Base64.encodeBase64(sCommentText.getBytes())));
-					sCommentText = null;
+					eCommentContent.setText(new String(Base64.encodeBase64(strContent.toString().getBytes())));
+					strContent = null;
 				}
 				rsComments.close();
 				stmtComments.close();

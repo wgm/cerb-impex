@@ -5,8 +5,8 @@ import com.cerberusweb.cerb2.entities.Worker;
 
 public class Driver {
 	public Driver() {
+		new Worker().export();
 //		new Address().export();
 		new Ticket().export();
-		new Worker().export();
 	}
 }
