@@ -31,8 +31,13 @@ public class Database {
 						sDbPassword
 					);
 				
+				if(Database.conn.isClosed()) {
+					System.err.println("Couldn't connect to the source database.");
+				}
+				
 			} catch (Exception ex) {
-				ex.printStackTrace();
+				System.err.println(ex.getMessage());
+				System.exit(1);
 			}
 		}
 		

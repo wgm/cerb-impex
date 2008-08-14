@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project basedir="..">
+
+	<property name="parent.lib.dir" value="Cerb4-Impex/libs/" />
+	
+	<path id="classpath">
+		<fileset dir="${parent.lib.dir}" includes="**/*.jar" />
+	</path>
+	
+	<path id="exporter-classpath">
+		<fileset dir="${parent.lib.dir}" includes="**/*.jar" />
+		<pathelement location="Cerb4-Impex/bin/" />
+	</path>
+
+	<target name="compile">
+		<javac srcdir="Cerb4-Impex/src" destdir="Cerb4-Impex/bin" classpathref="classpath" />
+		<javac srcdir="Cerb2Exporter/src" destdir="Cerb2Exporter/bin" classpathref="exporter-classpath" />
+		<javac srcdir="Cerb3Exporter/src" destdir="Cerb3Exporter/bin" classpathref="exporter-classpath" />
+	</target>
+
+	<target name="jar" depends="compile">
+		<jar destfile="Cerb4-Impex/drivers/Cerb2Driver.jar" basedir="Cerb2Exporter/bin" includes="**/*.class" manifest="Cerb2Exporter/MANIFEST.MF" />
+		<jar destfile="Cerb4-Impex/drivers/Cerb3Driver.jar" basedir="Cerb3Exporter/bin" includes="**/*.class" manifest="Cerb3Exporter/MANIFEST.MF" />
+		<jar destfile="Cerb4-Impex/Cerb4-ImpEx.jar" basedir="Cerb4-Impex/bin" includes="**/*.class" manifest="Cerb4-Impex/MANIFEST.MF" />
+	</target>
+</project>

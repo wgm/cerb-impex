@@ -107,7 +107,7 @@ public class Ticket {
 				doc.setXMLEncoding("ISO-8859-1");
 				
 				if(0 == sMask.length()) {
-					sMask = Configuration.get("exportMaskPrefix", "CERB2") + String.format("-%06d", iTicketId);
+					sMask = Configuration.get("exportMaskPrefix", "CERB2") + String.format("-%d", iTicketId);
 				}
 				
 				eTicket.addElement("subject").addText(sSubject);
