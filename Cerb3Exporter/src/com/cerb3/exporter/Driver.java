@@ -8,6 +8,7 @@ import java.util.HashSet;
 
 import com.cerb3.exporter.entities.Ticket;
 import com.cerb3.exporter.entities.Worker;
+import com.cerb4.impex.Configuration;
 
 public class Driver {
 	public Driver() {
@@ -15,10 +16,17 @@ public class Driver {
 			System.err.println("The source doesn't appear to be a Cerberus Helpdesk 3.6 database. Aborting!");
 			System.exit(1);
 		}
+
+		Boolean bExportTickets = new Boolean(Configuration.get("exportTickets", "false")); 
+		Boolean bExportWorkers = new Boolean(Configuration.get("exportWorkers", "false"));
 		
-		new Worker().export();
+		if(bExportWorkers)
+			new Worker().export();
+		
+		if(bExportTickets)
+			new Ticket().export();
+		
 //		new Address().export();
-		new Ticket().export();
 	}
 	
 	// Check DB version; 3.6+ required

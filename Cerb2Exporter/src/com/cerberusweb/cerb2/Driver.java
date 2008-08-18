@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashSet;
 
+import com.cerb4.impex.Configuration;
 import com.cerberusweb.cerb2.entities.Ticket;
 import com.cerberusweb.cerb2.entities.Worker;
 
@@ -15,10 +16,16 @@ public class Driver {
 			System.err.println("The source doesn't appear to be a Cerberus Helpdesk 2.7 database. Aborting!");
 			System.exit(1);
 		}
+
+		Boolean bExportTickets = new Boolean(Configuration.get("exportTickets", "false")); 
+		Boolean bExportWorkers = new Boolean(Configuration.get("exportWorkers", "false")); 
 		
-		new Worker().export();
-//		new Address().export();
-		new Ticket().export();
+		if(bExportWorkers)
+			new Worker().export();
+		
+		if(bExportTickets)
+			new Ticket().export();
+		
 	}
 	
 	// Check DB version; 2.7 required
