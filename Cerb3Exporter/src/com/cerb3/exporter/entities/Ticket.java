@@ -194,6 +194,10 @@ public class Ticket {
 						
 						while(rsAttachment.next()) {
 							SerialBlob tempBlob = new SerialBlob(rsAttachment.getBlob("part_content"));
+							
+							if(null == tempBlob || 0 == tempBlob.length())
+								continue;
+							
 							baos.write(tempBlob.getBytes(1, (int)tempBlob.length()));
 						}
 						rsAttachment.close();

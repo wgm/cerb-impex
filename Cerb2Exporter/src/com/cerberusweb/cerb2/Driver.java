@@ -7,6 +7,7 @@ import java.sql.Statement;
 import java.util.HashSet;
 
 import com.cerb4.impex.Configuration;
+import com.cerberusweb.cerb2.entities.Knowledgebase;
 import com.cerberusweb.cerb2.entities.Ticket;
 import com.cerberusweb.cerb2.entities.Worker;
 
@@ -19,12 +20,16 @@ public class Driver {
 
 		Boolean bExportTickets = new Boolean(Configuration.get("exportTickets", "false")); 
 		Boolean bExportWorkers = new Boolean(Configuration.get("exportWorkers", "false")); 
+		Boolean bExportKnowledgebase = new Boolean(Configuration.get("exportKnowledgebase", "false")); 
 		
 		if(bExportWorkers)
 			new Worker().export();
 		
 		if(bExportTickets)
 			new Ticket().export();
+		
+		if(bExportKnowledgebase)
+			new Knowledgebase().export();
 		
 	}
 	
