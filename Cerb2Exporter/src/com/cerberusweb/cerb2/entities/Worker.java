@@ -12,6 +12,7 @@ import org.dom4j.Element;
 import com.cerb4.impex.Configuration;
 import com.cerb4.impex.XMLThread;
 import com.cerberusweb.cerb2.Database;
+import com.cerberusweb.cerb2.Driver;
 
 public class Worker {
 	public void export() {
@@ -43,8 +44,8 @@ public class Worker {
 				doc.setXMLEncoding("ISO-8859-1");
 				
 				Integer iId = rs.getInt("user_id");
-				String sName = rs.getString("user_name");
-				String sEmail = rs.getString("user_email");
+				String sName = Driver.fixMagicQuotes(rs.getString("user_name"));
+				String sEmail = Driver.fixMagicQuotes(rs.getString("user_email"));
 				String sPassword = rs.getString("user_password");
 				Integer isSuperuser = rs.getInt("user_superuser");
 

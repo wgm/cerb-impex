@@ -16,6 +16,7 @@ import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
 import com.cerb3.exporter.Database;
+import com.cerb3.exporter.Driver;
 import com.cerb4.impex.Configuration;
 import com.cerb4.impex.XMLThread;
 
@@ -50,13 +51,13 @@ public class Ticket {
 			
 			while(rsTickets.next()) {
 				Integer iTicketId = rsTickets.getInt("ticket_id");
-				String sSubject = rsTickets.getString("ticket_subject");
-				String sMask = rsTickets.getString("ticket_mask").trim();
+				String sSubject = Driver.fixMagicQuotes(rsTickets.getString("ticket_subject"));
+				String sMask = Driver.fixMagicQuotes(rsTickets.getString("ticket_mask").trim());
 				Integer iCreatedDate = rsTickets.getInt("ticket_date");
 				Integer iUpdatedDate = rsTickets.getInt("ticket_updated");
 				Integer isWaiting = rsTickets.getInt("is_waiting_on_customer");
 				Integer isClosed = rsTickets.getInt("is_closed");
-				String sQueueName = rsTickets.getString("queue_name");
+				String sQueueName = Driver.fixMagicQuotes(rsTickets.getString("queue_name"));
 				String sQueueReplyTo = rsTickets.getString("queue_reply_to");
 				
 				if(0 == iCount % 2000 || 0 == iCount) {
@@ -115,8 +116,8 @@ public class Ticket {
 				while(rsMessages.next()) {
 					Integer iThreadId = rsMessages.getInt("thread_id");
 					String sThreadSender = rsMessages.getString("sender_from");
-					String sThreadSubject = rsMessages.getString("thread_subject");
-					String sThreadMsgId = rsMessages.getString("thread_message_id");
+					String sThreadSubject = Driver.fixMagicQuotes(rsMessages.getString("thread_subject"));
+					String sThreadMsgId = Driver.fixMagicQuotes(rsMessages.getString("thread_message_id"));
 					Long lThreadDate = rsMessages.getLong("thread_date");
 					
 					Element eMessage = eMessages.addElement("message");
@@ -146,7 +147,7 @@ public class Ticket {
 					StringBuilder strContent = new StringBuilder();
 					
 					while(rsContents.next()) {
-						String sContentPart = rsContents.getString("thread_content_part");
+						String sContentPart = Driver.fixMagicQuotes(rsContents.getString("thread_content_part"));
 						strContent.append(sContentPart);
 						// [TODO] Ugly
 						if(!rsContents.isLast() && 255 != sContentPart.length())
@@ -174,7 +175,7 @@ public class Ticket {
 					
 					while(rsAttachments.next()) {
 						Integer iFileId = rsAttachments.getInt("file_id"); 
-						String sFileName = rsAttachments.getString("file_name");
+						String sFileName = Driver.fixMagicQuotes(rsAttachments.getString("file_name"));
 						String sFileSize = rsAttachments.getString("file_size");
 						
 						Element eAttachment = eAttachments.addElement("attachment");
@@ -226,7 +227,7 @@ public class Ticket {
 				while(rsComments.next()) {
 					Integer iCommentCreatedDate = rsComments.getInt("date_created");
 					String sCommentAuthor = rsComments.getString("worker_email");
-					String sCommentText = rsComments.getString("note");
+					String sCommentText = Driver.fixMagicQuotes(rsComments.getString("note"));
 					
 					Element eComment = eComments.addElement("comment");
 					eComment.addElement("created_date").setText(iCommentCreatedDate.toString());

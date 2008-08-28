@@ -6,6 +6,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashSet;
 
+import com.cerb3.exporter.entities.Contact;
+import com.cerb3.exporter.entities.Knowledgebase;
+import com.cerb3.exporter.entities.Org;
 import com.cerb3.exporter.entities.Ticket;
 import com.cerb3.exporter.entities.Worker;
 import com.cerb4.impex.Configuration;
@@ -19,12 +22,24 @@ public class Driver {
 
 		Boolean bExportTickets = new Boolean(Configuration.get("exportTickets", "false")); 
 		Boolean bExportWorkers = new Boolean(Configuration.get("exportWorkers", "false"));
+		Boolean bExportOrgs = new Boolean(Configuration.get("exportOrgs", "false")); 
+		Boolean bExportContacts = new Boolean(Configuration.get("exportContacts", "false")); 
+		Boolean bExportKb = new Boolean(Configuration.get("exportKb", "false")); 
 		
 		if(bExportWorkers)
 			new Worker().export();
 		
 		if(bExportTickets)
 			new Ticket().export();
+		
+		if(bExportOrgs)
+			new Org().export();
+		
+		if(bExportContacts)
+			new Contact().export();
+		
+		if(bExportKb)
+			new Knowledgebase().export();		
 		
 //		new Address().export();
 	}
@@ -56,5 +71,18 @@ public class Driver {
 			return true;
 		
 		return false;
+	}
+	
+	public static String fixMagicQuotes (String str) {
+		Boolean bFixMagicQuotes = new Boolean(Configuration.get("fixMagicQuotes", "false")); 
+		
+		// Fix magic quotes from earlier versions of PHP apps
+		if(bFixMagicQuotes) {
+			str = str.replace("\\\\", "\\");
+			str = str.replace("\\'", "'");
+			str = str.replace("\\\"", "\"");
+		}
+		
+		return str;
 	}
 }

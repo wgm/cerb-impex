@@ -10,6 +10,7 @@ import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
 import com.cerb3.exporter.Database;
+import com.cerb3.exporter.Driver;
 import com.cerb4.impex.Configuration;
 import com.cerb4.impex.XMLThread;
 
@@ -43,8 +44,8 @@ public class Worker {
 				doc.setXMLEncoding("ISO-8859-1");
 				
 				Integer iId = rs.getInt("user_id");
-				String sName = rs.getString("user_name");
-				String sEmail = rs.getString("user_email");
+				String sName = Driver.fixMagicQuotes(rs.getString("user_name"));
+				String sEmail = Driver.fixMagicQuotes(rs.getString("user_email"));
 				String sPassword = rs.getString("user_password");
 				Integer isSuperuser = rs.getInt("user_superuser");
 				
