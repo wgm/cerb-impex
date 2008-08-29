@@ -32,10 +32,25 @@ public class Ticket {
 		Integer iCount = 0;
 
 		Boolean isVerbose = new Boolean(Configuration.get("verbose", "false"));
-		String sCfgTicketStartId = Configuration.get("exportTicketStartId", "1");
-		String sCfgTicketEndId = Configuration.get("exportTicketEndId", "");
+//		String sCfgTicketStartId = Configuration.get("exportTicketStartId", "1");
+//		String sCfgTicketEndId = Configuration.get("exportTicketEndId", "");
+		Boolean isCfgTicketExcludeOpen = new Boolean(Configuration.get("exportTicketExcludeOpen", "false"));
+		Boolean isCfgTicketExcludeClosed = new Boolean(Configuration.get("exportTicketExcludeClosed", "false"));
 		
 		try {
+			// Cache the number of tickets
+			Statement stmtMaxTicket = conn.createStatement();
+			ResultSet rsMaxTicket = stmtMaxTicket.executeQuery("SELECT max(ticket_id) AS max_id FROM ticket");
+			
+			Integer iMaxTicketId = 0;
+			if(rsMaxTicket.next())
+				iMaxTicketId = rsMaxTicket.getInt("max_id");
+			
+//			System.out.println("Max Ticket ID: " + iMaxTicketId);
+			
+			rsMaxTicket.close();
+			stmtMaxTicket.close();
+			
 			// Cache queue addresses
 			Statement stmtQueueAddresses = conn.createStatement();
 			
@@ -48,7 +63,6 @@ public class Ticket {
 				mapQueueIdToAddy.put(iQueueId, sQueueAddy);
 			}
 			
-			// [TODO] Skip spam training positives too
 			Statement stmtTickets = conn.createStatement();
 			
 			ResultSet rsTickets = stmtTickets.executeQuery("SELECT t.ticket_id, t.ticket_subject, t.ticket_mask, UNIX_TIMESTAMP(t.ticket_date) as ticket_date, "+ 
@@ -56,9 +70,12 @@ public class Ticket {
 			"FROM ticket t "+
 			"INNER JOIN queue q ON (q.queue_id=t.ticket_queue_id) "+ 
 			"WHERE t.ticket_status != 'dead' "+
-			"AND t.ticket_id >= " + sCfgTicketStartId + " " +
-			(0 != sCfgTicketEndId.length() ? ("AND t.ticket_id <= " + sCfgTicketEndId + " ") : "") +
-			"ORDER BY t.ticket_id ASC "+
+			"AND t.ticket_spam_trained != 2 "+
+			(isCfgTicketExcludeOpen ? "AND t.ticket_status = 'resolved' " : "") +
+			(isCfgTicketExcludeClosed ? "AND t.ticket_status != 'resolved' " : "") +
+//			"AND t.ticket_id >= " + sCfgTicketStartId + " " +
+//			(0 != sCfgTicketEndId.length() ? ("AND t.ticket_id <= " + sCfgTicketEndId + " ") : "") +
+			"ORDER BY t.ticket_id DESC "+
 			"");
 			
 			File outputDir = null;
@@ -95,7 +112,7 @@ public class Ticket {
 				
 				if(0 == iCount % 2000 || 0 == iCount) {
 					// Make the output subdirectory
-					outputDir = new File(cfgOutputDir+"/02-tickets-" + String.format("%09d", iTicketId));
+					outputDir = new File(cfgOutputDir+"/02-tickets-" + String.format("%09d", (iMaxTicketId-iTicketId)));
 					outputDir.mkdirs();
 	
 					if(!isVerbose)
