@@ -29,6 +29,7 @@ public class Ticket {
 		SimpleDateFormat rfcDateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z");
 
 		Integer iCount = 0;
+		Integer iSubDirCount = 0;		
 
 		Boolean isVerbose = new Boolean(Configuration.get("verbose", "false"));
 //		String sCfgTicketStartId = Configuration.get("exportTicketStartId", "1");
@@ -38,17 +39,17 @@ public class Ticket {
 		
 		try {
 			// Cache the number of tickets
-			Statement stmtMaxTicket = conn.createStatement();
-			ResultSet rsMaxTicket = stmtMaxTicket.executeQuery("SELECT max(ticket_id) AS max_id FROM ticket");
-			
-			Integer iMaxTicketId = 0;
-			if(rsMaxTicket.next())
-				iMaxTicketId = rsMaxTicket.getInt("max_id");
-			
-//			System.out.println("Max Ticket ID: " + iMaxTicketId);
-			
-			rsMaxTicket.close();
-			stmtMaxTicket.close();
+//			Statement stmtMaxTicket = conn.createStatement();
+//			ResultSet rsMaxTicket = stmtMaxTicket.executeQuery("SELECT max(ticket_id) AS max_id FROM ticket");
+//			
+//			Integer iMaxTicketId = 0;
+//			if(rsMaxTicket.next())
+//				iMaxTicketId = rsMaxTicket.getInt("max_id");
+//			
+////			System.out.println("Max Ticket ID: " + iMaxTicketId);
+//			
+//			rsMaxTicket.close();
+//			stmtMaxTicket.close();
 			
 			Statement stmtTickets = conn.createStatement();
 			ResultSet rsTickets = stmtTickets.executeQuery("SELECT t.ticket_id, t.ticket_subject, t.ticket_mask, UNIX_TIMESTAMP(t.ticket_date) as ticket_date, "+
@@ -79,7 +80,7 @@ public class Ticket {
 				
 				if(0 == iCount % 2000 || 0 == iCount) {
 					// Make the output subdirectory
-					outputDir = new File(cfgOutputDir+"/02-tickets-" + String.format("%09d", (iMaxTicketId-iTicketId)));
+					outputDir = new File(cfgOutputDir+"/02-tickets-" + String.format("%06d", ++iSubDirCount));
 					outputDir.mkdirs();
 	
 					if(!isVerbose)
