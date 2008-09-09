@@ -76,6 +76,9 @@ public class Driver {
 	public static String fixMagicQuotes (String str) {
 		Boolean bFixMagicQuotes = new Boolean(Configuration.get("fixMagicQuotes", "false")); 
 		
+		if(null == str)
+			str = "";
+		
 		// Fix magic quotes from earlier versions of PHP apps
 		if(bFixMagicQuotes) {
 			str = str.replace("\\\\", "\\");
