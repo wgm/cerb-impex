@@ -22,7 +22,7 @@ import com.cerb4.impex.XMLThread;
 public class Ticket {
 	public void export() {
 		Connection conn = Database.getInstance();
-		//String cfgImportGroupName = Configuration.get("exportToGroup", "Import:Cerb3");
+		//String cfgImportGroupName = Configuration.get("exportToGroup", "Import:Cerb4");
 		String cfgCerb4HomeDir = Configuration.get("cerb4HomeDir", "");
 		
 		String cfgOutputDir = Configuration.get("outputDir", "output");
@@ -33,40 +33,22 @@ public class Ticket {
 		Integer iSubDirCount = 0;		
 
 		Boolean isVerbose = new Boolean(Configuration.get("verbose", "false"));
-//		String sCfgTicketStartId = Configuration.get("exportTicketStartId", "1");
-//		String sCfgTicketEndId = Configuration.get("exportTicketEndId", "");
 		Boolean isCfgTicketExcludeOpen = new Boolean(Configuration.get("exportTicketExcludeOpen", "false"));
 		Boolean isCfgTicketExcludeClosed = new Boolean(Configuration.get("exportTicketExcludeClosed", "false"));
 		
 		try {
-			// Cache the number of tickets
-//			Statement stmtMaxTicket = conn.createStatement();
-//			ResultSet rsMaxTicket = stmtMaxTicket.executeQuery("SELECT max(ticket_id) AS max_id FROM ticket");
-//			
-//			Integer iMaxTicketId = 0;
-//			if(rsMaxTicket.next())
-//				iMaxTicketId = rsMaxTicket.getInt("max_id");
-//			
-////			System.out.println("Max Ticket ID: " + iMaxTicketId);
-//			
-//			rsMaxTicket.close();
-//			stmtMaxTicket.close();
-			
 			Statement stmtTickets = conn.createStatement();
 			ResultSet rsTickets = stmtTickets.executeQuery("SELECT t.id as ticket_id, t.subject, "+
 				"t.mask, t.created_date, "+
 				"t.updated_date, t.is_waiting, t.is_closed, "+
 				"team.name as team_name, c.name as category_name " +
 				"FROM ticket t "+
-				//"INNER JOIN queue q ON (q.queue_id=t.ticket_queue_id) "+
 				"INNER JOIN team ON (team.id = t.team_id) "+
-				"INNER JOIN category c ON (t.category_id = c.id) "+
+				"LEFT JOIN category c ON (t.category_id = c.id) "+
 				"WHERE t.is_deleted = 0 "+ 
 				"AND t.spam_training != 'S' "+
 				(isCfgTicketExcludeOpen ? "AND t.is_closed = 1 " : "") +
 				(isCfgTicketExcludeClosed ? "AND t.is_closed = 0 " : "") +
-//				"AND t.ticket_id >= " + sCfgTicketStartId + " " +
-//				(0 != sCfgTicketEndId.length() ? ("AND t.ticket_id <= " + sCfgTicketEndId + " ") : "") +
 				"ORDER BY t.id DESC "+
 				"");
 	
@@ -84,9 +66,6 @@ public class Ticket {
 				String sTeamName = Driver.fixMagicQuotes(rsTickets.getString("team_name"));
 				String sCategoryName = Driver.fixMagicQuotes(rsTickets.getString("category_name"));
 				
-				//String sQueueName = Driver.fixMagicQuotes(rsTickets.getString("queue_name"));
-				//String sQueueReplyTo = rsTickets.getString("queue_reply_to");
-				
 				if(0 == iCount % 2000 || 0 == iCount) {
 					// Make the output subdirectory
 					outputDir = new File(cfgOutputDir+"/02-tickets-" + String.format("%06d", ++iSubDirCount));
@@ -94,7 +73,6 @@ public class Ticket {
 	
 					if(!isVerbose)
 						System.out.println("Writing to " + outputDir.getAbsolutePath());
-//					System.gc();
 				}
 				
 				Document doc = DocumentHelper.createDocument();
@@ -160,7 +138,13 @@ public class Ticket {
 						String sHeaderName = rsHeaders.getString("header_name");
 						String sHeaderValue = rsHeaders.getString("header_value");
 						
-						eMessageHeaders.addElement(sHeaderName).addCDATA(sHeaderValue);
+						if(sHeaderName.equals("date") 
+								|| sHeaderName.equals("to")
+								|| sHeaderName.equals("from")
+								|| sHeaderName.equals("subject")
+								|| sHeaderName.equals("message-id")) {
+							eMessageHeaders.addElement(sHeaderName).addCDATA(sHeaderValue);
+						}						
 					}
 					
 					
@@ -194,8 +178,6 @@ public class Ticket {
 						eAttachment.addElement("mimetype").setText(sMimeType);
 						
 						
-						
-						
 						Element eAttachmentContent = eAttachment.addElement("content");
 						eAttachmentContent.addAttribute("encoding", "base64");
 						
@@ -205,7 +187,7 @@ public class Ticket {
 						}
 						
 						
-						String filePath = cfgCerb4HomeDir + "storage\\attachments\\" + sFilePath;
+						String filePath = cfgCerb4HomeDir + "storage/attachments/" + sFilePath;
 						File attachmentFile = new File(filePath);
 						
 						
@@ -240,7 +222,6 @@ public class Ticket {
 				stmtMessages.close();
 				
 				// Comments
-
 				Element eComments = eTicket.addElement("comments");
 				
 				Statement stmtComments = conn.createStatement();
@@ -268,7 +249,6 @@ public class Ticket {
 				stmtComments.close();
 				
 //				System.out.println(doc.asXML());
-				
 				String sXmlFileName = outputDir.getPath() + "/" + String.format("%09d",iTicketId) + ".xml";
 
 				try {

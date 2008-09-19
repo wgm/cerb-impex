@@ -1,11 +1,5 @@
 package com.cerb4.exporter;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.HashSet;
-
 import com.cerb4.exporter.entities.Contact;
 import com.cerb4.exporter.entities.Knowledgebase;
 import com.cerb4.exporter.entities.Org;
@@ -45,33 +39,33 @@ public class Driver {
 	}
 	
 	// Check DB version; 3.6+ required
-	private boolean checkSourceVersion() {
-		HashSet<String> setPatches = new HashSet<String>();
-		
-		try {
-			Connection conn = Database.getInstance();
-			
-			// Make sure we have a 3.6 ahsh
-			Statement stmtPatches = conn.createStatement();
-			stmtPatches.execute("SELECT script_md5 FROM db_script_hash"); 
-			ResultSet rsPatches = stmtPatches.getResultSet();
-			
-			// Store our patches
-			while(rsPatches.next()) {
-				setPatches.add(rsPatches.getString("script_md5"));
-			}
-			rsPatches.close();
-			stmtPatches.close();
-
-		} catch (SQLException sqlE) {
-			sqlE.printStackTrace(); // [TODO] Logging
-		}
-
-		if(setPatches.contains("a646f96e8f3bd6f7ced1737d389b1239")) // 3.6 clean
-			return true;
-		
-		return false;
-	}
+//	private boolean checkSourceVersion() {
+//		HashSet<String> setPatches = new HashSet<String>();
+//		
+//		try {
+//			Connection conn = Database.getInstance();
+//			
+//			// Make sure we have a 3.6 ahsh
+//			Statement stmtPatches = conn.createStatement();
+//			stmtPatches.execute("SELECT script_md5 FROM db_script_hash"); 
+//			ResultSet rsPatches = stmtPatches.getResultSet();
+//			
+//			// Store our patches
+//			while(rsPatches.next()) {
+//				setPatches.add(rsPatches.getString("script_md5"));
+//			}
+//			rsPatches.close();
+//			stmtPatches.close();
+//
+//		} catch (SQLException sqlE) {
+//			sqlE.printStackTrace(); // [TODO] Logging
+//		}
+//
+//		if(setPatches.contains("a646f96e8f3bd6f7ced1737d389b1239")) // 3.6 clean
+//			return true;
+//		
+//		return false;
+//	}
 	
 	public static String fixMagicQuotes (String str) {
 		Boolean bFixMagicQuotes = new Boolean(Configuration.get("fixMagicQuotes", "false")); 
