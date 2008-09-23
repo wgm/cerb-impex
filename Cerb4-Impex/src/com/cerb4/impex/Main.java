@@ -16,7 +16,22 @@ public class Main {
 	 */
 	public static void main(String[] args) {
 		String argConfigFile = "<null>";
+
+		String javaVersion = System.getProperty("java.version");
+		String[] versionSplit = javaVersion.split("\\.");
+		if(versionSplit.length < 2) {
+			System.err.println("Java version invalid (found: "+javaVersion+").  You must have Java 5 (1.1.5) or higher.   Export has been aborted.");
+			System.exit(1);
+		}
+
+		int majorVersion = Integer.parseInt(versionSplit[0]);
+		int minorVersion = Integer.parseInt(versionSplit[1]);
 		
+		if(majorVersion < 1 ||  (majorVersion == 1 && minorVersion < 5)) {
+			System.err.println("Your version of Java ("+javaVersion+") is too old.  You must have Java 5 (1.1.5) or higher.  Export has been aborted.");
+			System.exit(1);
+		}
+
 		if(1 != args.length) {
 			System.err.println("Syntax: C4ImpEx.jar <config file>");
 			System.exit(1);
