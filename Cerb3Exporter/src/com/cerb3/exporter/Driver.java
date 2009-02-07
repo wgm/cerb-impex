@@ -20,7 +20,7 @@ public class Driver {
 			System.exit(1);
 		}
 
-		Boolean bExportTickets = new Boolean(Configuration.get("exportTickets", "false")); 
+		Boolean bExportTickets = new Boolean(Configuration.get("exportTickets", "false"));
 		Boolean bExportWorkers = new Boolean(Configuration.get("exportWorkers", "false"));
 		Boolean bExportOrgs = new Boolean(Configuration.get("exportOrgs", "false")); 
 		Boolean bExportContacts = new Boolean(Configuration.get("exportContacts", "false")); 
@@ -51,7 +51,7 @@ public class Driver {
 		try {
 			Connection conn = Database.getInstance();
 			
-			// Make sure we have a 3.6 ahsh
+			// Make sure we have a 3.6 hash
 			Statement stmtPatches = conn.createStatement();
 			stmtPatches.execute("SELECT script_md5 FROM db_script_hash"); 
 			ResultSet rsPatches = stmtPatches.getResultSet();

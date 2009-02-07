@@ -18,9 +18,10 @@ public class XMLThread extends Thread {
 	@Override
 	public synchronized void start() {
 		Boolean isVerbose = new Boolean(Configuration.get("verbose", "false"));
+		String sExportEncoding = new String(Configuration.get("exportEncoding", "ISO-8859-1"));
 		
 		OutputFormat format = OutputFormat.createPrettyPrint();
-		format.setEncoding("ISO-8859-1");
+		format.setEncoding(sExportEncoding);
 		format.setOmitEncoding(false);
 		
 		try {

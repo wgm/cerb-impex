@@ -13,13 +13,15 @@ import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
 
 import com.cerb4.exporter.Database;
+import com.cerb4.impex.Configuration;
 
 
 
 public class Address {
 	public void export() {
 		Connection conn = Database.getInstance();
-
+		String sExportEncoding = new String(Configuration.get("exportEncoding", "ISO-8859-1"));
+		
 		Integer iCount = 0;
 		Integer iSubDir = 0;
 		
@@ -42,7 +44,7 @@ public class Address {
 				
 				Document doc = DocumentHelper.createDocument();
 				Element eAddress = doc.addElement("address");
-				doc.setXMLEncoding("ISO-8859-1");
+				doc.setXMLEncoding(sExportEncoding);
 				
 				Integer iId = rs.getInt("id");
 				String sEmail = rs.getString("email");
@@ -54,7 +56,7 @@ public class Address {
 //				System.out.println(doc.asXML());
 				
 				OutputFormat format = OutputFormat.createPrettyPrint();
-				format.setEncoding("ISO-8859-1");
+				format.setEncoding(sExportEncoding);
 				format.setOmitEncoding(false);
 				XMLWriter writer = new XMLWriter(new FileWriter(outputDir.getPath() + "/" + iId + ".xml"), format); 
 				writer.write(doc);

@@ -25,6 +25,7 @@ public class Ticket {
 		Connection conn = Database.getInstance();
 		String cfgImportGroupName = Configuration.get("exportToGroup", "Import:Cerb3");
 		String cfgOutputDir = Configuration.get("outputDir", "output");
+		String sExportEncoding = new String(Configuration.get("exportEncoding", "ISO-8859-1"));
 		
 		SimpleDateFormat rfcDateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z");
 
@@ -90,7 +91,7 @@ public class Ticket {
 				
 				Document doc = DocumentHelper.createDocument();
 				Element eTicket = doc.addElement("ticket");
-				doc.setXMLEncoding("ISO-8859-1");
+				doc.setXMLEncoding(sExportEncoding);
 				
 				if(0 == sMask.length()) {
 					sMask = Configuration.get("exportMaskPrefix", "CERB3") + String.format("-%d", iTicketId);
@@ -176,7 +177,7 @@ public class Ticket {
 					
 					Element eMessageContent = eMessage.addElement("content");
 					eMessageContent.addAttribute("encoding", "base64");
-					eMessageContent.setText(new String(Base64.encodeBase64(strContent.toString().getBytes())));
+					eMessageContent.setText(new String(Base64.encodeBase64(strContent.toString().getBytes(sExportEncoding))));
 					strContent = null;
 					
 					// Attachments
@@ -253,7 +254,7 @@ public class Ticket {
 					
 					Element eCommentContent = eComment.addElement("content");
 					eCommentContent.addAttribute("encoding", "base64");
-					eCommentContent.setText(new String(Base64.encodeBase64(sCommentText.getBytes())));
+					eCommentContent.setText(new String(Base64.encodeBase64(sCommentText.getBytes(sExportEncoding))));
 					sCommentText = null;
 				}
 				rsComments.close();

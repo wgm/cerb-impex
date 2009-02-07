@@ -34,6 +34,7 @@ public class Knowledgebase {
 	public void export() {
 		Connection conn = Database.getInstance();
 		String cfgOutputDir = Configuration.get("outputDir", "output");
+		String sExportEncoding = new String(Configuration.get("exportEncoding", "ISO-8859-1"));
 		String cfgKbRoot = Configuration.get("exportKbRoot", ""); 
 		
 		Integer iCount = 0;
@@ -84,7 +85,7 @@ public class Knowledgebase {
 				
 				Document doc = DocumentHelper.createDocument();
 				Element eKbArticle = doc.addElement("kbarticle");
-				doc.setXMLEncoding("ISO-8859-1");
+				doc.setXMLEncoding(sExportEncoding);
 				
 				Integer iId = rsArticles.getInt("kb_id");
 				String sTitle = Driver.fixMagicQuotes(rsArticles.getString("kb_problem_summary"));
@@ -160,7 +161,7 @@ public class Knowledgebase {
 				
 				Element eKbArticleContent = eKbArticle.addElement("content");
 				eKbArticleContent.addAttribute("encoding", "base64");
-				eKbArticleContent.setText(new String(Base64.encodeBase64(sContent.toString().getBytes())));
+				eKbArticleContent.setText(new String(Base64.encodeBase64(sContent.toString().getBytes(sExportEncoding))));
 				
 				String sXmlFileName = outputDir.getPath() + "/" + String.format("%06d", iId) + ".xml";
 
