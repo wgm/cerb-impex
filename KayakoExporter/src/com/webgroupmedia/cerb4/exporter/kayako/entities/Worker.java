@@ -18,6 +18,7 @@ public class Worker {
 	public void export() {
 		Connection conn = Database.getInstance();
 		String cfgOutputDir = Configuration.get("outputDir", "output");
+		String sExportEncoding = new String(Configuration.get("exportEncoding", "ISO-8859-1"));
 		
 		Integer iCount = 0;
 		Integer iSubDir = 0;
@@ -43,7 +44,7 @@ public class Worker {
 				
 				Document doc = DocumentHelper.createDocument();
 				Element eWorker = doc.addElement("worker");
-				doc.setXMLEncoding("ISO-8859-1");
+				doc.setXMLEncoding(sExportEncoding);
 				
 				Integer iId = rs.getInt("staffid");
 				

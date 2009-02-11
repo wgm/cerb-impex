@@ -24,7 +24,7 @@ public class Ticket {
 
 		String cfgOutputDir = Configuration.get("outputDir", "output");
 		String cfgImportGroupName = Configuration.get("exportToGroup", "Import:Kayako");
-		
+		String sExportEncoding = new String(Configuration.get("exportEncoding", "ISO-8859-1"));
 		
 		//SimpleDateFormat rfcDateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z");
 
@@ -95,7 +95,7 @@ public class Ticket {
 				
 				Document doc = DocumentHelper.createDocument();
 				Element eTicket = doc.addElement("ticket");
-				doc.setXMLEncoding("ISO-8859-1");
+				doc.setXMLEncoding(sExportEncoding);
 				
 				
 				

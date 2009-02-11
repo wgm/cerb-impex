@@ -20,6 +20,7 @@ public class Org {
 	public void export() {
 		Connection conn = Database.getInstance();
 		String cfgOutputDir = Configuration.get("outputDir", "output");
+		String sExportEncoding = new String(Configuration.get("exportEncoding", "ISO-8859-1"));
 		
 		Integer iCount = 0;
 		Integer iSubDir = 0;
@@ -38,7 +39,7 @@ public class Org {
 				
 				Document doc = DocumentHelper.createDocument();
 				Element eContact = doc.addElement("organization");
-				doc.setXMLEncoding("ISO-8859-1");
+				doc.setXMLEncoding(sExportEncoding);
 				
 				Integer iId = iCount;
 				String sName = Driver.fixMagicQuotes(rs.getString("companyname"));

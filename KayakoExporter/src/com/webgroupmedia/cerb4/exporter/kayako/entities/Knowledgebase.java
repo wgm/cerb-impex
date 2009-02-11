@@ -36,6 +36,7 @@ public class Knowledgebase {
 		Connection conn = Database.getInstance();
 		String cfgOutputDir = Configuration.get("outputDir", "output");
 		String cfgKbRoot = Configuration.get("exportKbRoot", ""); 
+		String sExportEncoding = new String(Configuration.get("exportEncoding", "ISO-8859-1"));
 		
 		Integer iCount = 0;
 		Integer iSubDir = 0;
@@ -83,7 +84,7 @@ public class Knowledgebase {
 				
 				Document doc = DocumentHelper.createDocument();
 				Element eKbArticle = doc.addElement("kbarticle");
-				doc.setXMLEncoding("ISO-8859-1");
+				doc.setXMLEncoding(sExportEncoding);
 				
 				Integer iId = rsArticles.getInt("kbarticleid");
 				

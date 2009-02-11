@@ -19,6 +19,7 @@
 		<javac srcdir="Cerb3Exporter/src" destdir="Cerb3Exporter/bin" classpathref="exporter-classpath" />
 		<javac srcdir="Cerb4Exporter/src" destdir="Cerb4Exporter/bin" classpathref="exporter-classpath" />
 		<javac srcdir="osTicketExporter/src" destdir="osTicketExporter/bin" classpathref="exporter-classpath" />
+		<javac srcdir="KayakoExporter/src" destdir="KayakoExporter/bin" classpathref="exporter-classpath" />
 	</target>
 
 	<target name="jar" depends="compile">
@@ -26,6 +27,7 @@
 		<jar destfile="Cerb4-Impex/drivers/Cerb3Driver.jar" basedir="Cerb3Exporter/bin" includes="**/*.class" manifest="Cerb3Exporter/MANIFEST.MF" />
 		<jar destfile="Cerb4-Impex/drivers/Cerb4Driver.jar" basedir="Cerb4Exporter/bin" includes="**/*.class" manifest="Cerb4Exporter/MANIFEST.MF" />
 		<jar destfile="Cerb4-Impex/drivers/osTicketDriver.jar" basedir="osTicketExporter/bin" includes="**/*.class" manifest="osTicketExporter/MANIFEST.MF" />
+		<jar destfile="Cerb4-Impex/drivers/KayakoDriver.jar" basedir="KayakoExporter/bin" includes="**/*.class" manifest="KayakoExporter/MANIFEST.MF" />		
 		<jar destfile="Cerb4-Impex/Cerb4-ImpEx.jar" basedir="Cerb4-Impex/bin" includes="**/*.class" manifest="Cerb4-Impex/MANIFEST.MF" />
 	</target>
 </project>
