@@ -1,5 +1,10 @@
 package com.webgroupmedia.cerb4.exporter.kayako;
 
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
 import com.cerb4.impex.Configuration;
 import com.webgroupmedia.cerb4.exporter.kayako.entities.Contact;
 import com.webgroupmedia.cerb4.exporter.kayako.entities.Knowledgebase;
@@ -11,10 +16,10 @@ import com.webgroupmedia.cerb4.exporter.kayako.entities.Worker;
 
 public class Driver {
 	public Driver() {
-//		if(!checkSourceVersion()) {
-//			System.err.println("The source doesn't appear to be a Cerberus Helpdesk 3.6 database. Aborting!");
-//			System.exit(1);
-//		}
+		if(!checkSourceVersion()) {
+			System.err.println("The source doesn't appear to be a Kayako eSupport 3.0.0+ database. Aborting!");
+			System.exit(1);
+		}
 
 		Boolean bExportTickets = new Boolean(Configuration.get("exportTickets", "false")); 
 		Boolean bExportWorkers = new Boolean(Configuration.get("exportWorkers", "false"));
@@ -40,34 +45,37 @@ public class Driver {
 //		new Address().export();
 	}
 	
-	// Check DB version; 3.6+ required
-//	private boolean checkSourceVersion() {
-//		HashSet<String> setPatches = new HashSet<String>();
-//		
-//		try {
-//			Connection conn = Database.getInstance();
-//			
-//			// Make sure we have a 3.6 ahsh
-//			Statement stmtPatches = conn.createStatement();
-//			stmtPatches.execute("SELECT script_md5 FROM db_script_hash"); 
-//			ResultSet rsPatches = stmtPatches.getResultSet();
-//			
-//			// Store our patches
-//			while(rsPatches.next()) {
-//				setPatches.add(rsPatches.getString("script_md5"));
-//			}
-//			rsPatches.close();
-//			stmtPatches.close();
-//
-//		} catch (SQLException sqlE) {
-//			sqlE.printStackTrace(); // [TODO] Logging
-//		}
-//
-//		if(setPatches.contains("a646f96e8f3bd6f7ced1737d389b1239")) // 3.6 clean
-//			return true;
-//		
-//		return false;
-//	}
+	// Check Kayako 3.x.x required
+	private boolean checkSourceVersion() {
+		System.out.println("Checking Kayako Version...");
+
+		boolean isAtLeastV3 = false;
+		try {
+			Connection conn = Database.getInstance();
+			
+			Statement stmtVersion = conn.createStatement();
+			stmtVersion.execute("SELECT data FROM swsettings WHERE vkey = 'version'"); 
+			ResultSet rsPatches = stmtVersion.getResultSet();
+			
+			while(rsPatches.next()) {
+				String versionStr = rsPatches.getString("data");
+				String[] versionArr = versionStr.split("[.]");
+				if(versionArr == null || versionArr.length == 0) {
+					isAtLeastV3 = false;
+					break;
+				}
+				System.out.println("Found Kayako version: " + versionArr[0]);
+				isAtLeastV3 = versionArr[0].equals("3"); 
+			}
+			rsPatches.close();
+			stmtVersion.close();
+
+		} catch (SQLException sqlE) {
+			sqlE.printStackTrace(); // [TODO] Logging
+		}
+
+		return isAtLeastV3;
+	}
 	
 	public static String fixMagicQuotes (String str) {
 		Boolean bFixMagicQuotes = new Boolean(Configuration.get("fixMagicQuotes", "false")); 
