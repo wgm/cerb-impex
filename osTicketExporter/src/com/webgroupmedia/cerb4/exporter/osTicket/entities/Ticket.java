@@ -184,6 +184,9 @@ public class Ticket {
 					String strUploadDir = "";
 					if(rsAttachPath.next()) {
 						strUploadDir = rsAttachPath.getString("upload_dir"); 
+						if(!strUploadDir.endsWith(File.separator)) {
+							strUploadDir += File.separator;
+						}
 					}
 					
 					Statement stmtAttachments = conn.createStatement();
