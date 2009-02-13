@@ -9,7 +9,10 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.codec.binary.Base64;
@@ -23,6 +26,9 @@ import com.webgroupmedia.cerb4.exporter.osTicket.Database;
 import com.webgroupmedia.cerb4.exporter.osTicket.Driver;
 
 public class Ticket {
+
+	public static SimpleDateFormat RFC822DATEFORMAT = new SimpleDateFormat("EEE', 'dd' 'MMM' 'yyyy' 'HH:mm:ss' 'Z", Locale.US);
+	
 	public void export() {
 		Connection conn = Database.getInstance();
 		String cfgImportGroupName = Configuration.get("exportToGroup", "Import:osTicket");
@@ -142,6 +148,10 @@ public class Ticket {
 					String strContent = rsMessages.getString("content"); 
 					Integer msgId = rsMessages.getInt("msg_id");
 					
+					java.sql.Timestamp createSqlDate = rsMessages.getTimestamp("created");
+					Date createDate = new Date(createSqlDate.getTime());
+
+					
 					Element eMessage = eMessages.addElement("message");
 					Element eMessageHeaders = eMessage.addElement("headers");
 					
@@ -149,25 +159,23 @@ public class Ticket {
 //				TODO eventually we may want to actually parse their raw headers, when they are actually present
 //				(Note, they are only present in customer emails AND only if they don't have the save raw headers configuration setting off)					
 
-//						if(sHeaderName.equals("date") 
-//								|| sHeaderName.equals("to")
-//								|| sHeaderName.equals("from")
-//								|| sHeaderName.equals("subject")
-//								|| sHeaderName.equals("message-id")) {
-//							eMessageHeaders.addElement(sHeaderName).addCDATA(sHeaderValue);
-					
 					boolean isWorkerReply = (rsMessages.getInt("worker_reply") == 1);
 					if(isWorkerReply) {
-						eMessageHeaders.addElement("to").addCDATA(deptEmailMap.get(ticketDeptId));
 						eMessageHeaders.addElement("from").addCDATA(rsMessages.getString("email"));
-						eMessageHeaders.addElement("subject").addCDATA(sSubject);			
 					}
 					else {
-						eMessageHeaders.addElement("to").addCDATA(deptEmailMap.get(ticketDeptId));
 						eMessageHeaders.addElement("from").addCDATA(requesterEmail);
-						eMessageHeaders.addElement("subject").addCDATA(sSubject);			
 					}
+					eMessageHeaders.addElement("to").addCDATA(deptEmailMap.get(ticketDeptId));
+					eMessageHeaders.addElement("subject").addCDATA(sSubject);
+					
+					//The date header isn't actually parsed from the header, but is generated 
+					//based on the create date for the message...
+					//We might have an option to parse the real date later but it would take longer
+					String rfcDate = RFC822DATEFORMAT.format(createDate);
+					eMessageHeaders.addElement("date").addCDATA(rfcDate);
 
+					
 					Element eMessageContent = eMessage.addElement("content");
 					eMessageContent.addAttribute("encoding", "base64");
 					eMessageContent.setText(new String(Base64.encodeBase64(strContent.getBytes(sExportEncoding))));
