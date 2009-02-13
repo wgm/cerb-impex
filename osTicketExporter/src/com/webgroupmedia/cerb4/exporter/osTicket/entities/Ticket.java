@@ -247,7 +247,8 @@ public class Ticket {
 				
 				String sqlComments = "SELECT n.created, n.note, s.email "+
 				"FROM ost_ticket_note n "+
-				"INNER JOIN ost_staff s ON n.staff_id = s.staff_id ";
+				"INNER JOIN ost_staff s ON n.staff_id = s.staff_id "+
+				"WHERE  n.ticket_id = " + iTicketId + " ";
 				
 				ResultSet rsComments = stmtComments.executeQuery(sqlComments);
 				
