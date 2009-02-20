@@ -85,7 +85,7 @@ public class Contact {
 					iSubDir++;
 					
 					// Make the output subdirectory
-					outputDir = new File(cfgOutputDir+"/04-contacts-" + String.format("%09d", iId));
+					outputDir = new File(cfgOutputDir+"/03-contacts-" + String.format("%09d", iId));
 					outputDir.mkdirs();
 				}
 				

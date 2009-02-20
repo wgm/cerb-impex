@@ -67,7 +67,7 @@ public class Org {
 					iSubDir++;
 					
 					// Make the output subdirectory
-					outputDir = new File(cfgOutputDir+"/03-orgs-" + String.format("%09d", iId));
+					outputDir = new File(cfgOutputDir+"/02-orgs-" + String.format("%09d", iId));
 					outputDir.mkdirs();
 				}
 				

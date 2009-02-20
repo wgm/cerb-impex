@@ -104,7 +104,7 @@ public class Ticket {
 				
 				if(0 == iCount % 2000 || 0 == iCount) {
 					// Make the output subdirectory
-					outputDir = new File(cfgOutputDir+"/02-tickets-" + String.format("%06d", ++iSubDirCount));
+					outputDir = new File(cfgOutputDir+"/04-tickets-" + String.format("%06d", ++iSubDirCount));
 					outputDir.mkdirs();
 	
 					if(!isVerbose)
