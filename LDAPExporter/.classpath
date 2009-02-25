@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Cerb4-Impex"/>
+	<classpathentry kind="lib" path="/Cerb4-Impex/ldap.jar" sourcepath="lib-src/jldap-src.zip"/>
+	<classpathentry kind="lib" path="/Cerb4-Impex/libs/commons-codec-1.3.jar"/>
+	<classpathentry kind="lib" path="/Cerb4-Impex/libs/dom4j-1.6.1.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
