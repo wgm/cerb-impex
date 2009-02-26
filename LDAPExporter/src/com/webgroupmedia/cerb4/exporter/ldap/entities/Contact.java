@@ -24,7 +24,7 @@ public class Contact {
 	
 	private final String sExportEncoding = Configuration.get("exportEncoding", "ISO-8859-1");
 	private final String cfgOutputDir = Configuration.get("outputDir", "output");
-	
+	private final String cfgInitialContactPassword = Configuration.get("initialContactPassword", "");
 	
 	private final String LDAP_HOST = Configuration.get("LDAPHost", "");
 	private final String LDAP_LOGIN_DN = Configuration.get("LDAPLoginDN", "output");
@@ -46,11 +46,8 @@ public class Contact {
 		;
 		boolean attributeOnly = false;
 		String attrs[] = { LDAPConnection.ALL_USER_ATTRS /*NO_ATTRS*/ };
-//		String ldapHost = "192.168.1.149";
-//		String loginDN = "manager";
-//		String password = "";
-//		String searchBase = "ou=users,dc=extraice,dc=com";
-//		String searchFilter = "(objectClass=*)";
+		//String attrs[] = {"uid","sn","cn","o","name","userPassword"};
+		
 		LDAPConnection lc = new LDAPConnection();
 
 		try {
@@ -63,138 +60,149 @@ public class Contact {
 			constraint.setBatchSize(0);
 			
 			lc.bind(ldapVersion, LDAP_LOGIN_DN, LDAP_PASSWORD.getBytes("UTF8"));
-			LDAPSearchResults searchResults = lc.search(LDAP_SEARCH_BASE, // container
-																			// to
-																			// search
-					searchScope, // search scope
-					null /*LDAP_SEARCH_FILTER*/, // search filter
-					attrs, // "1.1" returns entry name only
-					attributeOnly,// no attributes are returned
+			LDAPSearchResults searchResults = lc.search(LDAP_SEARCH_BASE, 
+					searchScope, 
+					LDAP_SEARCH_FILTER,
+					attrs, 
+					attributeOnly,
 					constraint);
 			
-			System.out.println(searchResults.hasMore());
-				while (searchResults.hasMore()) {
-					LDAPEntry nextEntry = null;
-					try {
-						nextEntry = searchResults.next();
-						System.out.println(nextEntry.getAttribute("uid").getStringValue());
-						
-						
-						String firstName="", lastName="", fullName="";
-						
-						LDAPAttribute displayNameAttribute = nextEntry.getAttribute("displayName");
-						if(displayNameAttribute != null) {
-							fullName = displayNameAttribute.getStringValue();
-							
-							if (-1 != fullName.indexOf(" ")) {
-								firstName = fullName.substring(0, fullName.indexOf(" "));
-								lastName = fullName.substring(fullName.indexOf(" "));
-							} else {
-								firstName = fullName;
-							}
+			//System.out.println(searchResults.hasMore());
+			while (searchResults.hasMore()) {
+				LDAPEntry nextEntry = null;
+				try {
+					nextEntry = searchResults.next();
+					//System.out.println(nextEntry.getAttribute("uid").getStringValue());
+//						LDAPAttributeSet attributeSet = nextEntry.getAttributeSet();
+//						for (Object object : attributeSet) {
+//							System.out.println("atr:"+object);
+//						}
+					
+					String firstName="", lastName="", fullName="";
+					
+					LDAPAttribute fullNameAttribute;
+					fullNameAttribute = nextEntry.getAttribute("displayName");
+					if(fullNameAttribute == null) {
+						fullNameAttribute = nextEntry.getAttribute("name");
+						if(fullNameAttribute == null) {
+							fullNameAttribute = nextEntry.getAttribute("uid");
 						}
+					}
+					
+					
+					if(fullNameAttribute != null) {
+						fullName = fullNameAttribute.getStringValue();
+						
+						if (-1 != fullName.indexOf(" ")) {
+							firstName = fullName.substring(0, fullName.indexOf(" "));
+							lastName = fullName.substring(fullName.indexOf(" "));
+						} else {
+							firstName = fullName;
+						}
+					}
 
-						LDAPAttribute surnameAttribute = nextEntry.getAttribute("sn");
-						if(surnameAttribute != null) {
-							lastName = surnameAttribute.getStringValue();
-						}
-						
-						
-						LDAPAttribute givenNameAttribute = nextEntry.getAttribute("givenName");
-						if(givenNameAttribute != null) {
-							firstName = givenNameAttribute.getStringValue();
-						}
+					LDAPAttribute surnameAttribute = nextEntry.getAttribute("sn");
+					if(surnameAttribute != null) {
+						lastName = surnameAttribute.getStringValue();
+					}
+					
+					
+					LDAPAttribute givenNameAttribute = nextEntry.getAttribute("givenName");
+					if(givenNameAttribute != null) {
+						firstName = givenNameAttribute.getStringValue();
+					}
 
-	
-						
-						String email = "";
-						LDAPAttribute emailAttribute = nextEntry.getAttribute("mail");
-						if(emailAttribute != null) {
-							email = emailAttribute.getStringValue();
-						}
-						
-						String password = "";
+
+					
+					String email = "";
+					LDAPAttribute emailAttribute = nextEntry.getAttribute("mail");
+					if(emailAttribute != null) {
+						email = emailAttribute.getStringValue();
+					}
+					
+					String password = "";
+
+					
+					if(cfgInitialContactPassword.length() > 0) {
+						password = getMd5Digest(cfgInitialContactPassword);
+					}
+					else {
 						LDAPAttribute passwordAttribute = nextEntry.getAttribute("userPassword");
 						if(passwordAttribute != null) {
 							password = passwordAttribute.getStringValue();
 						}
-						
-						String phone = null;
-						LDAPAttribute telephoneNumberAttribute = nextEntry.getAttribute("telephoneNumber");
-						if(telephoneNumberAttribute != null) {
-							phone = telephoneNumberAttribute.getStringValue();
+						if(password.length() != 0) {
+							password = getMd5Digest(password);
 						}
-						
-						if(phone == null) {
-							LDAPAttribute mobilePhoneAttribute = nextEntry.getAttribute("mobile");
-							if(mobilePhoneAttribute != null) {
-								phone = mobilePhoneAttribute.getStringValue();
-							}
-							else {
-								phone = "";
-							}
-							
-						}
-						
-						String orgName = "";
-						LDAPAttribute orgAttribute = nextEntry.getAttribute("o");
-						if(orgAttribute != null) {
-							orgName = orgAttribute.getStringValue();
-						}
-						
-						
-						
-						
-						//sn=last_name
-						//givenName=first_name
-						//or split displayName
-						
-						//mail=email
-						//userPassword=password
-						 //telephoneNumber
-						//mobile
-						//o=organization
-						
-						Document doc = DocumentHelper.createDocument();
-						Element eContact = doc.addElement("contact");
-						doc.setXMLEncoding(sExportEncoding);
-
-						eContact.addElement("first_name").addText(firstName);
-						eContact.addElement("last_name").addText(lastName);
-						eContact.addElement("email").addText(email);
-						eContact.addElement("password").addText(getMd5Digest(password));
-						eContact.addElement("phone").addText("");
-						eContact.addElement("organization").addText(orgName);
-						
-						if (0 == iCount % 2000) {
-							// Make the output subdirectory
-							outputDir = new File(cfgOutputDir + "/03-contacts-" + String.format("%09d", ++iSubDirCount));
-							outputDir.mkdirs();
-						}
-
-						String sXmlFileName =  outputDir.getPath() + "/" + String.format("%09d", iCount) + ".xml";
-						
-						
-						try {
-							new XMLThread(doc, sXmlFileName).start();
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-						
-						iCount++;
-						
-						//System.out.println(nextEntry);
 					}
-					catch (LDAPException e) {
-						System.out.println("Error: " + e.toString());
-						// Exception is thrown, go for next entry
+					
+					String phone = null;
+					LDAPAttribute telephoneNumberAttribute = nextEntry.getAttribute("telephoneNumber");
+					if(telephoneNumberAttribute != null) {
+						phone = telephoneNumberAttribute.getStringValue();
+					}
+					
+					if(phone == null) {
+						LDAPAttribute mobilePhoneAttribute = nextEntry.getAttribute("mobile");
+						if(mobilePhoneAttribute != null) {
+							phone = mobilePhoneAttribute.getStringValue();
+						}
+						else {
+							phone = "";
+						}
+						
+					}
+					
+					String orgName = "";
+					LDAPAttribute orgAttribute = nextEntry.getAttribute("o");
+					if(orgAttribute != null) {
+						orgName = orgAttribute.getStringValue();
+					}
+					
+					if(email == null || email.length() == 0) {
 						continue;
 					}
-	
-					//System.out.println("\n" + nextEntry.getDN());
-				}
+				
+					Document doc = DocumentHelper.createDocument();
+					Element eContact = doc.addElement("contact");
+					doc.setXMLEncoding(sExportEncoding);
 
-			// disconnect with the server
+					eContact.addElement("first_name").addText(firstName);
+					eContact.addElement("last_name").addText(lastName);
+					eContact.addElement("email").addText(email);
+					eContact.addElement("password").addText(password);
+					eContact.addElement("phone").addText(phone);
+					eContact.addElement("organization").addText(orgName);
+					
+					if (0 == iCount % 2000) {
+						// Make the output subdirectory
+						outputDir = new File(cfgOutputDir + "/03-contacts-" + String.format("%09d", ++iSubDirCount));
+						outputDir.mkdirs();
+					}
+
+					String sXmlFileName =  outputDir.getPath() + "/" + String.format("%09d", iCount+1) + ".xml";
+					
+					
+					try {
+						new XMLThread(doc, sXmlFileName).start();
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					
+					
+					iCount++;
+					
+					//System.out.println(nextEntry);
+				}
+				catch (LDAPException e) {
+					System.out.println("Error: " + e.toString());
+					// Exception is thrown, go for next entry
+					continue;
+				}
+				
+				//System.out.println("\n" + nextEntry.getDN());
+			}
+
 			lc.disconnect();
 		}
 		catch (LDAPException e) {
@@ -204,86 +212,12 @@ public class Contact {
 			System.out.println("Error: " + e.toString());
 		}        
 		
-//		initOrgsMap();
-//		Integer page = 0;
-//		
-//		while(!lastPageReached) {
-//			page++;
-//			Map<String,String> params = new HashMap<String,String>();
-//			params.put("role", "0");
-//			params.put("page", page.toString());
-//			ZendeskConnection.getInstance().requestZendeskDocumentAsync("users", null, params, new IResponseHandler() {
-//	
-//				public void onZenResponse(Document usersDoc) {
-//					Element usersElm = usersDoc.getRootElement();
-//					@SuppressWarnings("unchecked")
-//					List<Element> userElms = usersElm.elements("user");
-//					
-//					if(userElms==null || userElms.size() == 0) {
-//						lastPageReached = true;
-//						return;
-//					}
-//					for (Element userElm : userElms) {
-//						Integer userId = Integer.parseInt(userElm.elementText("id"));
-//						String name = userElm.elementText("name");
-//						String email = userElm.elementText("email");
-//						
-//						String firstName="", lastName="";
-//						if (-1 != name.indexOf(" ")) {
-//							firstName = name.substring(0, name.indexOf(" "));
-//							lastName = name.substring(name.indexOf(" "));
-//						} else {
-//							firstName = name;
-//						}
-//						
-//						Integer orgId;
-//						try {
-//							orgId = Integer.parseInt(userElm.elementText("organization-id"));
-//						}
-//						catch(NumberFormatException e) {
-//							orgId = -1;
-//						}
-//						
-//						Document doc = DocumentHelper.createDocument();
-//						Element eContact = doc.addElement("contact");
-//						doc.setXMLEncoding(sExportEncoding);
-//						
-//						eContact.addElement("first_name").addText(firstName);
-//						eContact.addElement("last_name").addText(lastName);
-//						eContact.addElement("email").addText(email);
-//						eContact.addElement("password").addText(getMd5Digest(cfgInitialContactPassword));
-//						eContact.addElement("phone").addText("");
-//						
-//						String orgName = orgMap.get(orgId);
-//						if(orgName == null) orgName = "";
-//						eContact.addElement("organization").addText(orgName);
-//						
-//						String sXmlFileName = getXmlWritePath(userId, doc);
-//						
-//						try {
-//							new XMLThread(doc, sXmlFileName).start();
-//						} catch (Exception e) {
-//							e.printStackTrace();
-//						}
-//					}
-//				}
-//				
-//			});
-//			
-//			try {
-//				Thread.sleep(1000);
-//			} catch (InterruptedException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-//		
-//		}
-		
 	}
 
 	
     private static String getMd5Digest(String input)
     {
+    	if(1==1) return input;
         try
         {
             MessageDigest md = MessageDigest.getInstance("MD5");
