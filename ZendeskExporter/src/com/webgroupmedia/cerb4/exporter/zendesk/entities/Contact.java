@@ -22,7 +22,7 @@ public class Contact {
 	
 	private final String sExportEncoding = Configuration.get("exportEncoding", "ISO-8859-1");
 	private final String cfgOutputDir = Configuration.get("outputDir", "output");
-	private final String cfgInitialContactPassword = new String(Configuration.get("initialContactPassword", "changeme"));
+	private final String cfgInitialContactPassword = new String(Configuration.get("initialContactPassword", ""));
 	
 	private Map<Integer,String> orgMap;
 	
@@ -75,6 +75,11 @@ public class Contact {
 							orgId = -1;
 						}
 						
+						String password="";
+						if(cfgInitialContactPassword.length() > 0) {
+							password = getMd5Digest(cfgInitialContactPassword);
+						}
+						
 						Document doc = DocumentHelper.createDocument();
 						Element eContact = doc.addElement("contact");
 						doc.setXMLEncoding(sExportEncoding);
@@ -82,7 +87,7 @@ public class Contact {
 						eContact.addElement("first_name").addText(firstName);
 						eContact.addElement("last_name").addText(lastName);
 						eContact.addElement("email").addText(email);
-						eContact.addElement("password").addText(getMd5Digest(cfgInitialContactPassword));
+						eContact.addElement("password").addText(password);
 						eContact.addElement("phone").addText("");
 						
 						String orgName = orgMap.get(orgId);

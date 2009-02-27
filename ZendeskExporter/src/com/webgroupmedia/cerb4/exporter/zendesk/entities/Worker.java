@@ -47,9 +47,7 @@ public class Worker {
 		}
 		while(adminList.size()==15);
 		
-		Document doc = DocumentHelper.createDocument();
-		doc.setXMLEncoding(cfgExportEncoding);
-		
+
 		Integer iCount = 0;
 		Integer iSubDir = 0;
 		File outputDir = null;
@@ -69,6 +67,9 @@ public class Worker {
 			} else {
 				firstName = name;
 			}
+			
+			Document doc = DocumentHelper.createDocument();
+			doc.setXMLEncoding(cfgExportEncoding);
 			
 			Element eWorker = doc.addElement("worker");
 			eWorker.addElement("first_name").addText(firstName);
