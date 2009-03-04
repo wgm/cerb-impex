@@ -29,6 +29,8 @@ public class Contact {
 	private final String cfgOutputDir = Configuration.get("outputDir", "output");
 	private final String cfgInitialContactPassword = Configuration.get("initialContactPassword", "");
 	
+	private final String cfgDefaultContactOrg = Configuration.get("defaultContactOrg", "");
+	
 	private final String LDAP_HOST = Configuration.get("LDAPHost", "");
 	private final String LDAP_LOGIN_DN = Configuration.get("LDAPLoginDN", "output");
 	private final String LDAP_PASSWORD = Configuration.get("LDAPPassword", "");
@@ -205,9 +207,14 @@ public class Contact {
 					}
 					
 					String orgName = "";
-					LDAPAttribute orgAttribute = nextEntry.getAttribute("o");
-					if(orgAttribute != null) {
-						orgName = orgAttribute.getStringValue();
+					if(cfgDefaultContactOrg.trim().length() > 0) {
+						orgName = cfgDefaultContactOrg;
+					}
+					else {
+						LDAPAttribute orgAttribute = nextEntry.getAttribute("o");
+						if(orgAttribute != null) {
+							orgName = orgAttribute.getStringValue();
+						}
 					}
 					
 					if(email == null || email.length() == 0) {
