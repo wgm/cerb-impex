@@ -25,7 +25,7 @@ public class Contact {
 		
 		try {
 			Statement s = conn.createStatement();
-			s.execute("SELECT a.id, a.first_name, a.last_name, a.email, aa.pass, a.phone, o.name AS org FROM address a LEFT JOIN contact_org o ON (o.id=a.contact_org_id)  LEFT JOIN address_auth aa ON a.id = aa.address_id ORDER BY a.id ASC");
+			s.execute("SELECT a.id, a.first_name, a.last_name, a.email, aa.pass, o.name AS org FROM address a LEFT JOIN contact_org o ON (o.id=a.contact_org_id)  LEFT JOIN address_auth aa ON a.id = aa.address_id ORDER BY a.id ASC");
 			ResultSet rs = s.getResultSet();
 	
 			File outputDir = null;
@@ -41,14 +41,14 @@ public class Contact {
 				String sLastName = Driver.fixMagicQuotes(rs.getString("last_name"));
 				String sEmail = Driver.fixMagicQuotes(rs.getString("email"));
 				String sPassword = Driver.fixMagicQuotes(rs.getString("pass"));
-				String sPhone = Driver.fixMagicQuotes(rs.getString("phone"));
+				//String sPhone = Driver.fixMagicQuotes(rs.getString("phone"));
 				String sOrg = Driver.fixMagicQuotes(rs.getString("org"));
 				
 				eContact.addElement("first_name").addText(sFirstName);
 				eContact.addElement("last_name").addText(sLastName);
 				eContact.addElement("email").addText(sEmail);
 				eContact.addElement("password").addText(sPassword);
-				eContact.addElement("phone").addText(sPhone);
+				eContact.addElement("phone").addText("");
 				eContact.addElement("organization").addText(sOrg);
 				
 				if(0 == iCount % 2000 || 0 == iCount) {

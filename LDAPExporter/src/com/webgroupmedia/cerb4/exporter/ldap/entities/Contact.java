@@ -5,6 +5,7 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.Security;
 
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
@@ -16,8 +17,10 @@ import com.novell.ldap.LDAPAttribute;
 import com.novell.ldap.LDAPConnection;
 import com.novell.ldap.LDAPEntry;
 import com.novell.ldap.LDAPException;
+import com.novell.ldap.LDAPJSSESecureSocketFactory;
 import com.novell.ldap.LDAPSearchConstraints;
 import com.novell.ldap.LDAPSearchResults;
+import com.novell.ldap.LDAPSocketFactory;
 
 
 public class Contact {
@@ -32,16 +35,64 @@ public class Contact {
 	private final String LDAP_SEARCH_BASE = Configuration.get("LDAPSearchBase", "");
 	private final String LDAP_SEARCH_FILTER = Configuration.get("LDAPSearchFilter", "(objectClass=*)");
 	
+	private final String TRUST_STORE_PATH = Configuration.get("JavaTrustStorePath", "");
+	
+	private final String LDAP_SEARCH_SCOPE = Configuration.get("LDAPSearchScope", "SCOPE_ONE");
+	private final String LDAP_PORT = Configuration.get("LDAPPort", "0");
+	private final String LDAP_SSL = Configuration.get("LDAPSSL", "false").trim();
+	
 	private File outputDir;
 	private int iCount=0;
 	private int iSubDirCount=0;
+	private boolean isSSL=false;
 	
 	public void export() {
+		System.out.println("Exporting Contacts");
+		LDAPSocketFactory ssf;
 		
+		if(LDAP_SSL.equals("true") || LDAP_SSL.equals("1")) {
+			isSSL = true;
+			 Security.addProvider(new com.sun.net.ssl.internal.ssl.Provider());
+			 
+			 if(TRUST_STORE_PATH.trim().length() > 0) {
+				 System.setProperty("javax.net.ssl.trustStore", TRUST_STORE_PATH);
+			 }
+			 
+			 ssf = new LDAPJSSESecureSocketFactory();
+			 LDAPConnection.setSocketFactory(ssf);
+		}
 		
-	     int ldapPort = LDAPConnection.DEFAULT_PORT;
-
-		int searchScope = LDAPConnection.SCOPE_ONE;
+		int ldapPort;
+		try {
+			ldapPort = Integer.parseInt(LDAP_PORT);
+			if(ldapPort == 0) {
+				if(isSSL) {
+					ldapPort = LDAPConnection.DEFAULT_SSL_PORT;
+				}
+				else {
+					ldapPort = LDAPConnection.DEFAULT_PORT;
+				}
+			}
+		}
+		catch(NumberFormatException e) {
+			System.out.println("Port entered in config file invalid, using default LDAP port");
+			ldapPort = LDAPConnection.DEFAULT_PORT;
+		}
+		
+	     int searchScope;
+	     if(LDAP_SEARCH_SCOPE.equals("SCOPE_BASE")) {
+	    	 searchScope = LDAPConnection.SCOPE_BASE;
+	     }
+	     else if(LDAP_SEARCH_SCOPE.equals("SCOPE_SUB")) {
+	    	 searchScope = LDAPConnection.SCOPE_SUB;
+	     }
+	     else if(LDAP_SEARCH_SCOPE.equals("SCOPE_SUBORDINATE_SUBTREE")){
+	    	 searchScope = LDAPConnection.SCOPE_SUBORDINATESUBTREE;
+	     }
+	     else {
+	    	 searchScope = LDAPConnection.SCOPE_ONE;
+	     }
+	     
 		int ldapVersion = LDAPConnection.LDAP_V3;
 		;
 		boolean attributeOnly = false;

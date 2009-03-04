@@ -27,7 +27,7 @@ public class Org {
 			Statement s = conn.createStatement();
 			s.execute("SELECT id, name, street AS street_address, "+
 				"city, province AS state, country, "+
-				"postal AS zip, phone, fax, "+
+				"postal AS zip, phone, "+
 				"website "+
 				"FROM contact_org c "+
 				"ORDER BY id ASC"
@@ -50,7 +50,7 @@ public class Org {
 				String sZip = Driver.fixMagicQuotes(rs.getString("zip"));
 				String sCountry = Driver.fixMagicQuotes(rs.getString("country"));
 				String sPhone = Driver.fixMagicQuotes(rs.getString("phone"));
-				String sFax = Driver.fixMagicQuotes(rs.getString("fax"));
+				//String sFax = Driver.fixMagicQuotes(rs.getString("fax"));
 				String sWebsite = Driver.fixMagicQuotes(rs.getString("website"));
 				
 				eContact.addElement("name").addText(sName);
@@ -60,7 +60,7 @@ public class Org {
 				eContact.addElement("postal").addText(sZip);
 				eContact.addElement("country").addText(sCountry);
 				eContact.addElement("phone").addText(sPhone);
-				eContact.addElement("fax").addText(sFax);
+				eContact.addElement("fax").addText("");
 				eContact.addElement("website").addText(sWebsite);
 				
 				if(0 == iCount % 2000 || 0 == iCount) {
