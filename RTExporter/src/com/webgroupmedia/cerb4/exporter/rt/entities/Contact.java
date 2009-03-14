@@ -41,12 +41,13 @@ public class Contact {
 					"WHERE 1=1 ";
 			
 			String sqlLastCondition = "";
-			boolean exportPrivileged =  (cfgExportRTGroup.equals("Unprivileged"));
-			if(exportPrivileged) {
+			boolean exportUnprivileged =  (cfgExportRTGroup.equals("Unprivileged"));
+			if(exportUnprivileged) {
 				sqlLastCondition = "AND g.Type = 'Unprivileged' ";
 			}
 			else {
-				sqlLastCondition = "AND g.Domain='UserDefined' AND g.Name = '" + cfgExportRTGroup+"' ";
+				String groupsQueryStr = Driver.generateGroupsListSQL(cfgExportRTGroup);
+				sqlLastCondition = "AND g.Domain='UserDefined' AND g.Name IN (" + groupsQueryStr+") ";
 			}
 			
 			String sqlOrder = "ORDER BY u.id ";

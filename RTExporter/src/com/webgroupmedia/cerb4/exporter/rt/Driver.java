@@ -2,6 +2,8 @@ package com.webgroupmedia.cerb4.exporter.rt;
 
 import com.cerb4.impex.Configuration;
 import com.webgroupmedia.cerb4.exporter.rt.entities.Contact;
+import com.webgroupmedia.cerb4.exporter.rt.entities.Org;
+import com.webgroupmedia.cerb4.exporter.rt.entities.Ticket;
 import com.webgroupmedia.cerb4.exporter.rt.entities.Worker;
 
 
@@ -18,22 +20,18 @@ public class Driver {
 		Boolean bExportWorkers = new Boolean(Configuration.get("exportWorkers", "false"));
 		Boolean bExportOrgs = new Boolean(Configuration.get("exportOrgs", "false")); 
 		Boolean bExportContacts = new Boolean(Configuration.get("exportContacts", "false")); 
-		Boolean bExportKb = new Boolean(Configuration.get("exportKb", "false")); 
 		
 		if(bExportWorkers)
 			new Worker().export();
 		
-//		if(bExportTickets)
-//			new Ticket().export();
-//		
-//		if(bExportOrgs)
-//			new Org().export();
+		if(bExportTickets)
+			new Ticket().export();
+		
+		if(bExportOrgs)
+			new Org().export();
 		
 		if(bExportContacts)
 			new Contact().export();
-		
-//		if(bExportKb)
-//			new Knowledgebase().export();		
 		
 	}
 	
@@ -83,5 +81,20 @@ public class Driver {
 		}
 		
 		return str;
+	}
+	
+	public static String generateGroupsListSQL(String groupListStr) {
+		String[] groups = groupListStr.split(",");
+		//List<String> groupsList = new ArrayList<String>();
+		String groupsQueryStr = "";
+		boolean firstTime = true;
+		for (String group : groups) {
+			if(!firstTime) {
+				groupsQueryStr += ",";
+			}
+			groupsQueryStr += "'"+group.trim()+"'";
+			firstTime = false;
+		}
+		return groupsQueryStr;
 	}
 }

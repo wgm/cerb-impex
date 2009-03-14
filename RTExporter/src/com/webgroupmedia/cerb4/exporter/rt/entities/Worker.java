@@ -53,7 +53,8 @@ public class Worker {
 				sqlLastCondition = "AND g.Type = 'Privileged' ";
 			}
 			else {
-				sqlLastCondition = "AND g.Domain='UserDefined' AND g.Name = '" + cfgExportRTGroup+"' ";
+				String groupsQueryStr = Driver.generateGroupsListSQL(cfgExportRTGroup);
+				sqlLastCondition = "AND g.Domain='UserDefined' AND g.Name IN (" + groupsQueryStr+") ";
 			}
 			
 			String sqlOrder = "ORDER BY u.id ";
