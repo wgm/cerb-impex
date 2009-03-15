@@ -1,0 +1,19 @@
+Cerberus Helpdesk 4.x - Import/Export (ImpEx) Tool
+
+Copyright (c) 2009 WebGroup Media, LLC.
+http://www.cerberusweb.com/
+
+Instructions can be found at:
+http://wiki.cerb4.com/wiki/ImpEx
+
+Source code is available from:
+http://github.com/wgm/cerb4-impex
+
+This software is released under the MIT license.
+
+To modify the source, you can open this directory as a Java workspace in Eclipse.
+
+To run the binary files, copy the ./Cerb4-ImpEx directory wherever you like.  Then:
+java -jar Cerb4-ImpEx.jar <config file>
+
+Example config files for various drivers are in the ./Cerb4-ImpEx/example-config directory.  Copy the appropriate template to a new file and make your modifications.
