@@ -1,13 +1,13 @@
-Cerberus Helpdesk 4.0 - Import/Export (ImpEx) Tool
+Cerberus Helpdesk 4.x - Import/Export (ImpEx) Tool
 
-Copyright (c) 2008 WebGroup Media, LLC.
+Copyright (c) 2009 WebGroup Media, LLC.
 http://www.cerberusweb.com/
 
 Instructions can be found at:
 http://wiki.cerb4.com/wiki/ImpEx
 
 Source code is available from:
-http://svn.webgroupmedia.com/cerb4-impex-java/trunk
+http://github.com/jstanden/cerb4-impex-tools/
 
 This software is released under the MIT license.
 
