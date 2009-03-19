@@ -12,7 +12,7 @@ import com.webgroupmedia.cerb4.exporter.rt.entities.Worker;
 public class Driver {
 	public Driver() {
 //		if(!checkSourceVersion()) {
-//			System.err.println("The source doesn't appear to be a Kayako eSupport 3.0.0+ database. Aborting!");
+//			System.err.println("");
 //			System.exit(1);
 //		}
 
@@ -34,38 +34,6 @@ public class Driver {
 			new Contact().export();
 		
 	}
-	
-//	// Check Kayako 3.x.x required
-//	private boolean checkSourceVersion() {
-//		System.out.println("Checking Kayako Version...");
-//
-//		boolean isAtLeastV3 = false;
-//		try {
-//			Connection conn = Database.getInstance();
-//			
-//			Statement stmtVersion = conn.createStatement();
-//			stmtVersion.execute("SELECT data FROM swsettings WHERE vkey = 'version'"); 
-//			ResultSet rsPatches = stmtVersion.getResultSet();
-//			
-//			while(rsPatches.next()) {
-//				String versionStr = rsPatches.getString("data");
-//				String[] versionArr = versionStr.split("[.]");
-//				if(versionArr == null || versionArr.length == 0) {
-//					isAtLeastV3 = false;
-//					break;
-//				}
-//				System.out.println("Found Kayako version: " + versionArr[0]);
-//				isAtLeastV3 = versionArr[0].equals("3"); 
-//			}
-//			rsPatches.close();
-//			stmtVersion.close();
-//
-//		} catch (SQLException sqlE) {
-//			sqlE.printStackTrace(); // [TODO] Logging
-//		}
-//
-//		return isAtLeastV3;
-//	}
 	
 	public static String fixMagicQuotes (String str) {
 		Boolean bFixMagicQuotes = new Boolean(Configuration.get("fixMagicQuotes", "false")); 

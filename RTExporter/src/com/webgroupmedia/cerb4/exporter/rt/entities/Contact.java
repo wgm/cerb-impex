@@ -26,7 +26,7 @@ public class Contact {
 		Integer iCount = 0;
 		Integer iSubDir = 0;
 		
-		System.out.println("contacts");
+		//System.out.println("contacts");
 		
 		try {
 			
@@ -61,7 +61,7 @@ public class Contact {
 			while(rs.next()) {
 				
 				Document doc = DocumentHelper.createDocument();
-				Element eWorker = doc.addElement("worker");
+				Element eWorker = doc.addElement("contact");
 				doc.setXMLEncoding(sExportEncoding);
 				
 				Integer userId = rs.getInt("id");

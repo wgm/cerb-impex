@@ -152,7 +152,7 @@ public class Ticket {
 				while(rsMessages.next()) {
 					
 					Integer messageId = rsMessages.getInt("id");
-					if(iTicketId.intValue()==4) System.out.println(messageId);
+
 					String strContent = Driver.fixMagicQuotes(rsMessages.getString("Content"));
 					String creatorEmail = Driver.fixMagicQuotes(rsMessages.getString("EmailAddress"));
 					
@@ -166,10 +166,10 @@ public class Ticket {
 					}
 					
 					Long createTimestamp = rsMessages.getTimestamp("Created").getTime();
-					System.out.println(createTimestamp);
+
 					SimpleDateFormat RFC822DATEFORMAT = new SimpleDateFormat("EEE', 'dd' 'MMM' 'yyyy' 'HH:mm:ss' 'Z", Locale.US);
 					String rfcCreateDate = RFC822DATEFORMAT.format(createTimestamp);
-					System.out.println(rfcCreateDate);
+
 					String headers = rsMessages.getString("Headers");
 					String[] headersArr = headers.split("[\r\n]");
 					
@@ -179,15 +179,13 @@ public class Ticket {
 					
 					for (String header : headersArr) {
 						String[] headerArr = header.split(":", 2);
-						if(iTicketId.intValue()==4) System.out.println(header);
+
 						if(headerArr.length > 0) {
 							String headerName = headerArr[0].trim();
-							if(iTicketId.intValue()==4)System.out.println("headerName:"+headerName);
 							String headerVal="";
 							if(headerArr.length > 1) {
 								headerVal=headerArr[1].trim();
 							}
-							if(iTicketId.intValue()==4)System.out.println("headerVal:" +headerVal);
 							if(headerName.equals("Date")) {
 								headerDate = headerVal;
 							}

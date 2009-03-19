@@ -26,8 +26,6 @@ public class Org {
 		Integer iCount = 0;
 		Integer iSubDir = 0;
 		
-		System.out.println("contacts");
-		
 		try {
 			
 			Statement s = conn.createStatement();

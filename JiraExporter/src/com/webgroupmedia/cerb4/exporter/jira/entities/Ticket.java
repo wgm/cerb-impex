@@ -31,6 +31,13 @@ public class Ticket {
 	private final String cfgExportEncoding = new String(Configuration.get("exportEncoding", "UTF-8"));
 	private final String cfgInputXml = new String(Configuration.get("jiraXmlFile", "input.xml"));
 	
+	private final String cfgMessageFrom = new String(Configuration.get("messageFrom", "root@localhost"));
+	private final String cfgMessageTo = new String(Configuration.get("messageTo", "root@localhost"));
+	private final String cfgRequester = new String(Configuration.get("requester", "root@localhost"));
+	private final String cfgCommentAuthor = new String(Configuration.get("commentAuthor", "root@localhost"));
+	
+	private final String LINE_BREAK = "\n"; //System.getProperty("line.separator");
+	
 	public void export() {
 			Document document;
 	        SAXReader reader = new SAXReader();
@@ -55,10 +62,46 @@ public class Ticket {
 					doc.setXMLEncoding(cfgExportEncoding);
 
 					String title = itemElm.elementText("title");
-					String description = itemElm.elementText("description");
+					String description = itemElm.elementText("description").replaceAll("<br/>", LINE_BREAK);
+					description = description.replaceAll("&amp;", "&");
+					description = description.replace("&quot;", "\"");
+					
+					
 					String summary = itemElm.elementText("summary");
 					String component = itemElm.elementText("component");
 					Integer ticketId = Integer.parseInt(itemElm.element("key").attributeValue("id"));
+					
+					//Create a string buffer for custom field data
+					StringBuilder customFieldBuffer = new StringBuilder(); 
+					
+					
+					Element customFieldsElm = itemElm.element("customfields");
+					@SuppressWarnings("unchecked")
+					List<Element> customFieldElms = customFieldsElm.elements("customfield");
+					for (Element customFieldElm : customFieldElms) {
+						String customFieldName = customFieldElm.elementText("customfieldname");
+						
+						customFieldBuffer.append(customFieldName);
+						customFieldBuffer.append(" : ");
+						
+						Element customFieldValuesElm = customFieldElm.element("customfieldvalues");
+						@SuppressWarnings("unchecked")
+						List<Element> customFieldValueElms = customFieldValuesElm.elements("customfieldvalue");
+						boolean firstTime = true;
+						for (Element customFieldValueElm : customFieldValueElms) {
+							if(!firstTime) {
+								customFieldBuffer.append(", ");
+							}
+							firstTime = false;
+							
+							customFieldBuffer.append(customFieldValueElm.getTextTrim());
+						}
+						customFieldBuffer.append(LINE_BREAK);
+					}
+					
+					String assignee = itemElm.elementText("assignee");
+					String reporter = itemElm.elementText("reporter");
+					
 					
 					String isClosed = "0";
 					//Open, In Progress, Reopened, Resolved, Closed
@@ -107,9 +150,9 @@ public class Ticket {
 					eTicket.addElement("is_waiting").addText("0");
 					eTicket.addElement("is_closed").addText(isClosed);
 					
-					Element eRequesters = eTicket.addElement("requesters");//support@cardlogicgroup.com
+					Element eRequesters = eTicket.addElement("requesters");
 					//???? asignee field has username and full name, no email
-					eRequesters.addElement("address").setText("support@cardlogicgroup.com");
+					eRequesters.addElement("address").setText(cfgRequester);
 					
 					Element eMessages = eTicket.addElement("messages");
 					Element eComments = eTicket.addElement("comments");
@@ -119,36 +162,35 @@ public class Ticket {
 					Element eMessageHeaders = eMessage.addElement("headers");
 					
 					eMessageHeaders.addElement("date").addCDATA(rfcCreatedStr);
-					eMessageHeaders.addElement("to").addCDATA("support@cardlogicgroup.com");
-					eMessageHeaders.addElement("subject").addCDATA(title);
-					eMessageHeaders.addElement("from").addCDATA("support@cardlogicgroup.com");
+					eMessageHeaders.addElement("to").addCDATA(cfgMessageTo);
+					eMessageHeaders.addElement("subject").addCDATA(summary);
+					eMessageHeaders.addElement("from").addCDATA(cfgMessageFrom);
 					
 					Element eMessageContent = eMessage.addElement("content");
 					eMessageContent.addAttribute("encoding", "base64");
 					try {
+						StringBuilder messageBodyBuffer = new StringBuilder();
+						messageBodyBuffer.append(description);
 						
-						eMessageContent.setText(new String(Base64.encodeBase64(summary.getBytes(cfgExportEncoding))));
+						//append some line feeds
+						for(int i=0; i < 4; i++) messageBodyBuffer.append(LINE_BREAK);
+
+						messageBodyBuffer.append("asignee: ");
+						messageBodyBuffer.append(assignee);
+						messageBodyBuffer.append(LINE_BREAK);
+						
+						messageBodyBuffer.append("reporter: ");
+						messageBodyBuffer.append(reporter);
+						for(int i=0; i < 3; i++) messageBodyBuffer.append(LINE_BREAK);
+						
+						messageBodyBuffer.append(customFieldBuffer);
+						
+						String messageBody = messageBodyBuffer.toString(); 
+						eMessageContent.setText(new String(Base64.encodeBase64(messageBody.getBytes(cfgExportEncoding))));
 					} catch (UnsupportedEncodingException e) {
 						e.printStackTrace();
 					}
-					
-					
-					Element eMessage2 = eMessages.addElement("message");
-					Element eMessageHeaders2 = eMessage2.addElement("headers");
-					
-					eMessageHeaders2.addElement("date").addCDATA(rfcCreatedStr);
-					eMessageHeaders2.addElement("to").addCDATA("support@cardlogicgroup.com");
-					eMessageHeaders2.addElement("subject").addCDATA(title);
-					eMessageHeaders2.addElement("from").addCDATA("support@cardlogicgroup.com");
-					
-					Element eMessageContent2 = eMessage2.addElement("content");
-					eMessageContent2.addAttribute("encoding", "base64");
-					try {
-						eMessageContent2.setText(new String(Base64.encodeBase64(description.getBytes(cfgExportEncoding))));
-					} catch (UnsupportedEncodingException e) {
-						e.printStackTrace();
-					}
-					
+
 					
 					
 					
@@ -177,7 +219,7 @@ public class Ticket {
 							String commentCreateStr = Long.toString(commentCreatedDate.getTime()/1000);
 							eComment.addElement("created_date").setText(commentCreateStr);
 							
-							eComment.addElement("author").addCDATA("support@cardlogicgroup.com");
+							eComment.addElement("author").addCDATA(cfgCommentAuthor);
 							
 							Element eCommentContent = eComment.addElement("content");
 							eCommentContent.addAttribute("encoding", "base64");
