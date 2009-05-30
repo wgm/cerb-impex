@@ -139,7 +139,7 @@ public class Ticket {
 				String messageSQL = "SELECT p.ticketpostid, p.contents, p.email from_email, p.subject, " +
 						"p.dateline, i.messageid " +
 						"FROM swticketposts p " +
-						"INNER JOIN swticketmessageids i ON p.ticketpostid = i.ticketpostid " +
+						"LEFT JOIN swticketmessageids i ON p.ticketpostid = i.ticketpostid " +
 						"WHERE p.ticketid = " + iTicketId + " " + 
 						"ORDER BY p.ticketpostid";
 				
@@ -155,7 +155,9 @@ public class Ticket {
 					String emailFrom = rsMessages.getString("from_email");
 					String subject = rsMessages.getString("subject");
 					String messageIdHeader = rsMessages.getString("messageid");
-					
+					if(messageIdHeader == null) {
+						messageIdHeader = "";
+					}
 					
 					Element eMessage = eMessages.addElement("message");
 					Element eMessageHeaders = eMessage.addElement("headers");
