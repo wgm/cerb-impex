@@ -5,6 +5,8 @@ import java.io.File;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import javax.sql.rowset.serial.SerialBlob;
 
@@ -26,7 +28,7 @@ public class Ticket {
 		String cfgImportGroupName = Configuration.get("exportToGroup", "Import:Kayako");
 		String sExportEncoding = new String(Configuration.get("exportEncoding", "ISO-8859-1"));
 		
-		//SimpleDateFormat rfcDateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z");
+		SimpleDateFormat rfcDateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z");
 
 		Integer iCount = 0;
 		Integer iSubDirCount = 0;		
@@ -36,6 +38,11 @@ public class Ticket {
 		Boolean isCfgTicketExcludeClosed = new Boolean(Configuration.get("exportTicketExcludeClosed", "false"));
 		
 		try {
+			Statement stmt = conn.createStatement();
+			stmt.execute("set names utf8");
+			stmt.close();
+			
+			
 			Statement stmtTickets = conn.createStatement();
 			
 			String sqlTickets = "SELECT t.ticketid as ticket_id, t.subject, "+
@@ -152,6 +159,8 @@ public class Ticket {
 					String strContent = Driver.fixMagicQuotes(rsMessages.getString("contents"));
 					
 					Integer messageDate = rsMessages.getInt("dateline");
+					String sMessageDate = rfcDateFormat.format(new Date(messageDate*1000));
+					
 					String emailFrom = rsMessages.getString("from_email");
 					String subject = rsMessages.getString("subject");
 					String messageIdHeader = rsMessages.getString("messageid");
@@ -162,7 +171,7 @@ public class Ticket {
 					Element eMessage = eMessages.addElement("message");
 					Element eMessageHeaders = eMessage.addElement("headers");
 					
-					eMessageHeaders.addElement("date").addCDATA(messageDate.toString());
+					eMessageHeaders.addElement("date").addCDATA(sMessageDate);
 					eMessageHeaders.addElement("to").addCDATA(queueEmail);
 					eMessageHeaders.addElement("from").addCDATA(emailFrom);
 					eMessageHeaders.addElement("subject").addCDATA(subject);
@@ -172,7 +181,7 @@ public class Ticket {
 					
 					Element eMessageContent = eMessage.addElement("content");
 					eMessageContent.addAttribute("encoding", "base64");
-					eMessageContent.setText(new String(Base64.encodeBase64(strContent.getBytes())));
+					eMessageContent.setText(new String(Base64.encodeBase64(strContent.getBytes(sExportEncoding))));
 					strContent = null;
 					
 					// Attachments
@@ -261,7 +270,7 @@ public class Ticket {
 					
 					Element eCommentContent = eComment.addElement("content");
 					eCommentContent.addAttribute("encoding", "base64");
-					eCommentContent.setText(new String(Base64.encodeBase64(sCommentText.getBytes())));
+					eCommentContent.setText(new String(Base64.encodeBase64(sCommentText.getBytes(sExportEncoding))));
 					sCommentText = null;
 				}
 				rsComments.close();
