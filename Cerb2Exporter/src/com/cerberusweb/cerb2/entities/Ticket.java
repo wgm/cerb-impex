@@ -27,6 +27,7 @@ public class Ticket {
 		String cfgImportGroupName = Configuration.get("exportToGroup", "Import:Cerb2");
 		String cfgOutputDir = Configuration.get("outputDir", "output");
 		String sExportEncoding = new String(Configuration.get("exportEncoding", "ISO-8859-1"));
+		String dbCharacterEncoding = new String(Configuration.get("dbCharacterEncoding", "latin1"));
 		
 		SimpleDateFormat rfcDateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z");
 
@@ -40,6 +41,10 @@ public class Ticket {
 		Boolean isCfgTicketExcludeClosed = new Boolean(Configuration.get("exportTicketExcludeClosed", "false"));
 		
 		try {
+			Statement stmt = conn.createStatement();
+			stmt.execute("set names " + dbCharacterEncoding);
+			stmt.close();
+			
 			// Cache the number of tickets
 //			Statement stmtMaxTicket = conn.createStatement();
 //			ResultSet rsMaxTicket = stmtMaxTicket.executeQuery("SELECT max(ticket_id) AS max_id FROM ticket");

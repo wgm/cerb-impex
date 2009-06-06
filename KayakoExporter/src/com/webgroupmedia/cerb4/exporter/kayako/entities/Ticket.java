@@ -27,6 +27,7 @@ public class Ticket {
 		String cfgOutputDir = Configuration.get("outputDir", "output");
 		String cfgImportGroupName = Configuration.get("exportToGroup", "Import:Kayako");
 		String sExportEncoding = new String(Configuration.get("exportEncoding", "ISO-8859-1"));
+		String dbCharacterEncoding = new String(Configuration.get("dbCharacterEncoding", "latin1"));
 		
 		SimpleDateFormat rfcDateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z");
 
@@ -39,7 +40,7 @@ public class Ticket {
 		
 		try {
 			Statement stmt = conn.createStatement();
-			stmt.execute("set names utf8");
+			stmt.execute("set names " + dbCharacterEncoding);
 			stmt.close();
 			
 			
@@ -144,7 +145,7 @@ public class Ticket {
 				Statement stmtMessages = conn.createStatement();
 				
 				String messageSQL = "SELECT p.ticketpostid, p.contents, p.email from_email, p.subject, " +
-						"p.dateline, i.messageid " +
+						"p.dateline, i.messageid, p.ishtml " +
 						"FROM swticketposts p " +
 						"LEFT JOIN swticketmessageids i ON p.ticketpostid = i.ticketpostid " +
 						"WHERE p.ticketid = " + iTicketId + " " + 
@@ -157,6 +158,7 @@ public class Ticket {
 				while(rsMessages.next()) {
 					Integer messageId = rsMessages.getInt("ticketpostid");
 					String strContent = Driver.fixMagicQuotes(rsMessages.getString("contents"));
+					boolean isHtml = rsMessages.getInt("ishtml")==1;
 					
 					Integer messageDate = rsMessages.getInt("dateline");
 					String sMessageDate = rfcDateFormat.format(new Date(messageDate*1000));
@@ -180,6 +182,7 @@ public class Ticket {
 					
 					
 					Element eMessageContent = eMessage.addElement("content");
+					eMessageContent.addAttribute("content-type", isHtml ? "html" : "text");
 					eMessageContent.addAttribute("encoding", "base64");
 					eMessageContent.setText(new String(Base64.encodeBase64(strContent.getBytes(sExportEncoding))));
 					strContent = null;
