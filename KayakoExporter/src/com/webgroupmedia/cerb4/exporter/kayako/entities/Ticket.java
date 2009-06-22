@@ -160,7 +160,7 @@ public class Ticket {
 					String strContent = Driver.fixMagicQuotes(rsMessages.getString("contents"));
 					boolean isHtml = rsMessages.getInt("ishtml")==1;
 					
-					Integer messageDate = rsMessages.getInt("dateline");
+					Long messageDate = rsMessages.getLong("dateline");
 					String sMessageDate = rfcDateFormat.format(new Date(messageDate*1000));
 					
 					String emailFrom = rsMessages.getString("from_email");
