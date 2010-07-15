@@ -1,29 +1,61 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <project basedir="..">
-	
+
 	<property name="parent.lib.dir" value="Cerb4-Impex/libs/" />
-	
+    <!-- Compile with Debug Symbols? -->
+    <property name="compile.debug" value="true"/>
+
 	<path id="classpath">
 		<fileset dir="${parent.lib.dir}" includes="**/*.jar" />
 	</path>
-	
+
 	<path id="exporter-classpath">
 		<fileset dir="${parent.lib.dir}" includes="**/*.jar" />
 		<pathelement location="Cerb4-Impex/bin/" />
 	</path>
 
-	<target name="compile">
-		<javac srcdir="Cerb4-Impex/src" destdir="Cerb4-Impex/bin" classpathref="classpath" />
-		<javac srcdir="Cerb2Exporter/src" destdir="Cerb2Exporter/bin" classpathref="exporter-classpath" />
-		<javac srcdir="Cerb3Exporter/src" destdir="Cerb3Exporter/bin" classpathref="exporter-classpath" />
-		<javac srcdir="Cerb4Exporter/src" destdir="Cerb4Exporter/bin" classpathref="exporter-classpath" />
-		<javac srcdir="osTicketExporter/src" destdir="osTicketExporter/bin" classpathref="exporter-classpath" />
-		<javac srcdir="KayakoExporter/src" destdir="KayakoExporter/bin" classpathref="exporter-classpath" />
-        <javac srcdir="ZendeskExporter/src" destdir="ZendeskExporter/bin" classpathref="exporter-classpath" />
-		<javac srcdir="LDAPExporter/src" destdir="LDAPExporter/bin" classpathref="exporter-classpath" />
-		<javac srcdir="RTExporter/src" destdir="RTExporter/bin" classpathref="exporter-classpath" />
-		<javac srcdir="JiraExporter/src" destdir="JiraExporter/bin" classpathref="exporter-classpath" />
+    <target name="compile">
+        <javac debug="${compile.debug}"
+               srcdir="Cerb4-Impex/src"
+               destdir="Cerb4-Impex/bin"
+               classpathref="classpath"/>
+        <javac debug="${compile.debug}"
+               srcdir="Cerb2Exporter/src"
+               destdir="Cerb2Exporter/bin"
+               classpathref="exporter-classpath"/>
+        <javac debug="${compile.debug}"
+               srcdir="Cerb3Exporter/src"
+               destdir="Cerb3Exporter/bin"
+               classpathref="exporter-classpath"/>
+        <javac debug="${compile.debug}"
+               srcdir="Cerb4Exporter/src"
+               destdir="Cerb4Exporter/bin"
+               classpathref="exporter-classpath"/>
+        <javac debug="${compile.debug}"
+               srcdir="osTicketExporter/src"
+               destdir="osTicketExporter/bin"
+               classpathref="exporter-classpath"/>
+        <javac debug="${compile.debug}"
+               srcdir="KayakoExporter/src"
+               destdir="KayakoExporter/bin"
+               classpathref="exporter-classpath"/>
+        <javac debug="${compile.debug}"
+               srcdir="ZendeskExporter/src"
+               destdir="ZendeskExporter/bin"
+               classpathref="exporter-classpath"/>
+        <javac debug="${compile.debug}"
+               srcdir="LDAPExporter/src"
+               destdir="LDAPExporter/bin"
+               classpathref="exporter-classpath"/>
+        <javac debug="${compile.debug}"
+               srcdir="RTExporter/src"
+               destdir="RTExporter/bin"
+               classpathref="exporter-classpath"/>
+        <javac debug="${compile.debug}"
+               srcdir="JiraExporter/src"
+               destdir="JiraExporter/bin"
+               classpathref="exporter-classpath"/>
 	</target>
 
 	<target name="jar" depends="compile">
@@ -31,13 +63,12 @@
 		<jar destfile="Cerb4-Impex/drivers/Cerb3Driver.jar" basedir="Cerb3Exporter/bin" includes="**/*.class" manifest="Cerb3Exporter/MANIFEST.MF" />
 		<jar destfile="Cerb4-Impex/drivers/Cerb4Driver.jar" basedir="Cerb4Exporter/bin" includes="**/*.class" manifest="Cerb4Exporter/MANIFEST.MF" />
 		<jar destfile="Cerb4-Impex/drivers/osTicketDriver.jar" basedir="osTicketExporter/bin" includes="**/*.class" manifest="osTicketExporter/MANIFEST.MF" />
-		<jar destfile="Cerb4-Impex/drivers/KayakoDriver.jar" basedir="KayakoExporter/bin" includes="**/*.class" manifest="KayakoExporter/MANIFEST.MF" />            
+		<jar destfile="Cerb4-Impex/drivers/KayakoDriver.jar" basedir="KayakoExporter/bin" includes="**/*.class" manifest="KayakoExporter/MANIFEST.MF" />
         <jar destfile="Cerb4-Impex/drivers/ZendeskDriver.jar" basedir="ZendeskExporter/bin" includes="**/*.class" manifest="ZendeskExporter/MANIFEST.MF" />
 		<jar destfile="Cerb4-Impex/drivers/LDAPDriver.jar" basedir="LDAPExporter/bin" includes="**/*.class" manifest="LDAPExporter/MANIFEST.MF" />
 		<jar destfile="Cerb4-Impex/drivers/RTDriver.jar" basedir="RTExporter/bin" includes="**/*.class" manifest="RTExporter/MANIFEST.MF" />
-		<jar destfile="Cerb4-Impex/drivers/JiraDriver.jar" basedir="JiraExporter/bin" includes="**/*.class" manifest="JiraExporter/MANIFEST.MF" />		
+		<jar destfile="Cerb4-Impex/drivers/JiraDriver.jar" basedir="JiraExporter/bin" includes="**/*.class" manifest="JiraExporter/MANIFEST.MF" />
 		<jar destfile="Cerb4-Impex/Cerb4-ImpEx.jar" basedir="Cerb4-Impex/bin" includes="**/*.class" manifest="Cerb4-Impex/MANIFEST.MF" />
-        
-
     </target>
+
 </project>
