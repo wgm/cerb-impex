@@ -1,3 +1,5 @@
 *.class
 *.iml
 .idea
+.metadata
+.DS_Store
