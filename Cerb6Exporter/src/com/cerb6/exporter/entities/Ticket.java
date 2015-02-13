@@ -178,44 +178,50 @@ public class Ticket {
 						String sFilePath = rsAttachments.getString("storage_key");
 						String sMimeType = rsAttachments.getString("mime_type");
 						
-						Element eAttachment = eAttachments.addElement("attachment");
-						eAttachment.addElement("name").setText(sFileName);
-						eAttachment.addElement("size").setText(sFileSize);
-						eAttachment.addElement("mimetype").setText(sMimeType);
-						
-						Element eAttachmentContent = eAttachment.addElement("content");
-						eAttachmentContent.addAttribute("encoding", "base64");
-						
 						// [TODO] Option to ignore huge attachments?
 						if(cfgCerb6HomeDir.charAt(cfgCerb6HomeDir.length()-1) != File.separatorChar) {
 							cfgCerb6HomeDir += File.separatorChar;
 						}
 						
-						String filePath = cfgCerb6HomeDir + "storage/attachments/" + sFilePath;
-						File attachmentFile = new File(filePath);
+                        try {
+    						String filePath = cfgCerb6HomeDir + "storage/attachments/" + sFilePath;
+    						File attachmentFile = new File(filePath);
+                            
+    						Element eAttachment = eAttachments.addElement("attachment");
+    						eAttachment.addElement("name").setText(sFileName);
+    						eAttachment.addElement("size").setText(sFileSize);
+    						eAttachment.addElement("mimetype").setText(sMimeType);
 						
-				        InputStream is = new FileInputStream(attachmentFile);
-				        long length = attachmentFile.length();
-				        if (length > Integer.MAX_VALUE) {
-				            // File is too large
-				        	throw new Exception("File is too large");
-				        }
-				        byte[] bytes = new byte[(int)length];
+    						Element eAttachmentContent = eAttachment.addElement("content");
+    						eAttachmentContent.addAttribute("encoding", "base64");
+						
+    				        InputStream is = new FileInputStream(attachmentFile);
+    				        long length = attachmentFile.length();
+    				        if (length > Integer.MAX_VALUE) {
+    				            // File is too large
+    				        	throw new Exception("File is too large");
+    				        }
+    				        byte[] bytes = new byte[(int)length];
 				    
-				        int offset = 0;
-				        int numRead = 0;
-				        while (offset < bytes.length
-				               && (numRead=is.read(bytes, offset, bytes.length-offset)) >= 0) {
-				            offset += numRead;
-				        }
-				        // Ensure all the bytes have been read in
-				        if (offset < bytes.length) {
-				            throw new IOException("Could not completely read file "+attachmentFile.getName());
-				        }
-				        is.close();
-						ByteArrayOutputStream baos = new ByteArrayOutputStream();
-						baos.write(bytes);
-						eAttachmentContent.addText(new String(Base64.encodeBase64(baos.toByteArray())));
+    				        int offset = 0;
+    				        int numRead = 0;
+    				        while (offset < bytes.length
+    				               && (numRead=is.read(bytes, offset, bytes.length-offset)) >= 0) {
+    				            offset += numRead;
+    				        }
+    				        // Ensure all the bytes have been read in
+    				        if (offset < bytes.length) {
+    				            throw new IOException("Could not completely read file "+attachmentFile.getName());
+    				        }
+    				        is.close();
+    						ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    						baos.write(bytes);
+    						eAttachmentContent.addText(new String(Base64.encodeBase64(baos.toByteArray())));
+                            
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        
 					}
 					
 					rsAttachments.close();
