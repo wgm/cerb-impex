@@ -186,6 +186,9 @@ public class Ticket {
                         try {
     						String filePath = cfgCerb6HomeDir + "storage/attachments/" + sFilePath;
     						File attachmentFile = new File(filePath);
+								
+								if(!attachmentFile.exists())
+									continue;
                             
     						Element eAttachment = eAttachments.addElement("attachment");
     						eAttachment.addElement("name").setText(sFileName);
